@@ -183,7 +183,7 @@ function App() {
       <header className="sticky top-0 z-20 border-b border-white/10 bg-slate-950/70 backdrop-blur-md">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3">
           <div className="flex items-center gap-3">
-            <img src="/logo.svg" alt="Imagine" className="h-9 w-9" />
+            <img src={`${import.meta.env.BASE_URL}logo.svg`} alt="Imagine" className="h-9 w-9" />
             <div>
               <h1 className="text-lg font-semibold">Imagine</h1>
               <p className="text-xs text-slate-400">Generate images via Pollinations</p>
