@@ -333,14 +333,12 @@ function App() {
                 ))}
               </div>
               {activeTemplate && (
-                <div className="relative">
-                  <TemplateBuilder
-                    template={TEMPLATES.find(t => t.id === activeTemplate)}
-                    currentPrompt={prompt}
-                    onApply={(txt) => { setPrompt(txt); setActiveTemplate(null); toast.success('Template applied') }}
-                    onCancel={() => setActiveTemplate(null)}
-                  />
-                </div>
+                <TemplateBuilder
+                  template={TEMPLATES.find(t => t.id === activeTemplate)}
+                  currentPrompt={prompt}
+                  onApply={(txt) => { setPrompt(txt); setActiveTemplate(null); toast.success('Template applied') }}
+                  onCancel={() => setActiveTemplate(null)}
+                />
               )}
             </div>
             <textarea
