@@ -1,0 +1,18 @@
+{
+  "items": [
+    {"url": "https://image.pollinations.ai/prompt/boats%20on%20a%20lake?width=1024&height=1024&seed=111&model=flux&nologo=true", "localSrc": "seed/boats.jpg", "prompt": "Boats on a lake, dramatic clouds, black and white"},
+    {"url": "https://image.pollinations.ai/prompt/ancient%20temple%20in%20jungle?width=1024&height=1024&seed=222&model=flux&nologo=true", "localSrc": "seed/temple.jpg", "prompt": "Ancient temple in jungle, mist, cinematic"},
+    {"url": "https://image.pollinations.ai/prompt/futuristic%20city%20street%20at%20night?width=1024&height=1024&seed=333&model=flux&nologo=true", "localSrc": "seed/city.jpg", "prompt": "Futuristic city street at night, neon, rain"},
+    {"url": "https://image.pollinations.ai/prompt/portrait%20of%20a%20woman%20soft%20light?width=1024&height=1024&seed=444&model=flux&nologo=true", "localSrc": "seed/portrait.jpg", "prompt": "Portrait of a woman, soft light, 85mm"},
+    {"url": "https://image.pollinations.ai/prompt/retro%20computer%20workspace?width=1024&height=1024&seed=555&model=flux&nologo=true", "localSrc": "seed/retro.jpg", "prompt": "Retro computer workspace, warm light"},
+    {"url": "https://image.pollinations.ai/prompt/fantasy%20castle%20on%20a%20cliff?width=1024&height=1024&seed=666&model=flux&nologo=true", "localSrc": "seed/castle.jpg", "prompt": "Fantasy castle on a cliff, sunrise"},
+    {"url": "https://image.pollinations.ai/prompt/still%20life%20fruit%20photography?width=1024&height=1024&seed=777&model=flux&nologo=true", "localSrc": "seed/fruit.jpg", "prompt": "Still life fruit photography, studio light"},
+    {"url": "https://image.pollinations.ai/prompt/minimal%20interior%20living%20room?width=1024&height=1024&seed=888&model=flux&nologo=true", "localSrc": "seed/interior.jpg", "prompt": "Minimal interior living room, natural light"},
+    {"url": "https://image.pollinations.ai/prompt/snowy%20mountain%20landscape?width=1024&height=1024&seed=999&model=flux&nologo=true", "localSrc": "seed/mountain.jpg", "prompt": "Snowy mountain landscape, golden hour"},
+    {"url": "https://image.pollinations.ai/prompt/cyberpunk%20alley?width=1024&height=1024&seed=123&model=flux&nologo=true", "localSrc": "seed/alley.jpg", "prompt": "Cyberpunk alley, neon reflections"},
+    {"url": "https://image.pollinations.ai/prompt/watercolor%20forest%20illustration?width=1024&height=1024&seed=234&model=flux&nologo=true", "localSrc": "seed/watercolor.jpg", "prompt": "Watercolor forest illustration, soft tones"},
+    {"url": "https://image.pollinations.ai/prompt/space%20nebula?width=1024&height=1024&seed=345&model=flux&nologo=true", "localSrc": "seed/nebula.jpg", "prompt": "Space nebula, vibrant colors"}
+  ]
+}
+
+
