@@ -133,6 +133,7 @@ export default function Feed({ onUsePrompt }) {
   }, [enabled, speed, items.length])
 
   const visible = useMemo(() => items.slice(pageStart, pageStart + PAGE_SIZE), [items, pageStart])
+  const [loaded, setLoaded] = useState(new Set())
 
   const content = useMemo(() => {
     if (error) {
@@ -153,7 +154,19 @@ export default function Feed({ onUsePrompt }) {
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
         {visible.map((item, idx) => (
           <figure key={item.url + idx} className="group overflow-hidden rounded-xl border border-white/10 bg-slate-900 slide-in-up">
-            <img src={item.url} alt={item.prompt || 'Pollinations image'} className="aspect-square w-full object-cover" />
+            <div className="relative">
+              <img
+                src={item.url}
+                alt={item.prompt || 'Pollinations image'}
+                className={loaded.has(item.url) ? 'aspect-square w-full object-cover' : 'aspect-square w-full object-cover opacity-0'}
+                onLoad={() => setLoaded((prev) => { const s = new Set(prev); s.add(item.url); return s })}
+              />
+              {!loaded.has(item.url) && (
+                <div className="absolute inset-0 grid place-items-center bg-slate-900/30">
+                  <img src={`${import.meta.env.BASE_URL}logo.svg`} className="h-8 w-8 animate-spin-slow opacity-80" alt="loading" />
+                </div>
+              )}
+            </div>
             <figcaption className="grid grid-cols-2 gap-2 p-2 text-xs">
               <button
                 className="btn btn-secondary h-8 text-xs"

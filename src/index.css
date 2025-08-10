@@ -70,6 +70,9 @@ body {
 
 .gen-grid img { @apply block w-full h-auto; }
 
+/* slower spinner for logo placeholder */
+.animate-spin-slow { animation: spin 2.4s linear infinite; }
+
 @keyframes fadeIn {
   from { opacity: 0 }
   to { opacity: 1 }

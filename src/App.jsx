@@ -146,6 +146,7 @@ function App() {
   const [activeTile, setActiveTile] = useState(null)
   const [showAdvanced, setShowAdvanced] = useState(false)
   const [showTemplates, setShowTemplates] = useState(false)
+  const [loadedTileUrls, setLoadedTileUrls] = useState(() => new Set())
 
   useEffect(() => {
     try {
@@ -661,7 +662,19 @@ function App() {
                     <div key={(g.url||'base')+idx} className="group relative overflow-hidden rounded-lg border border-white/10 bg-slate-900"
                          onTouchStart={() => setActiveTile(tileId)}>
                       <div className="absolute left-2 top-2 z-10 rounded bg-slate-950/60 px-2 py-0.5 text-xs">{g.label || `v${idx+1}`}</div>
-                      <img src={g.url || imageUrl} alt="Generated" className="w-full object-contain" />
+                      <div className="relative">
+                        <img
+                          src={g.url || imageUrl}
+                          alt="Generated"
+                          onLoad={() => setLoadedTileUrls((prev) => { const s = new Set(prev); s.add(g.url || imageUrl); return s })}
+                          className={classNames('w-full object-contain transition-opacity', loadedTileUrls.has(g.url || imageUrl) ? 'opacity-100' : 'opacity-0')}
+                        />
+                        {!loadedTileUrls.has(g.url || imageUrl) && (
+                          <div className="absolute inset-0 grid place-items-center bg-slate-900/30">
+                            <img src={`${import.meta.env.BASE_URL}logo.svg`} className="h-10 w-10 animate-spin-slow opacity-80" alt="loading" />
+                          </div>
+                        )}
+                      </div>
                       {/* Desktop (hover) toolbar overlay */}
                       <div className="pointer-events-auto absolute inset-x-0 bottom-0 z-10 hidden items-center justify-center gap-3 p-3 backdrop-blur-sm text-[13px] md:text-sm sm:group-hover:flex">
                         <button className="btn btn-secondary h-10 px-3 grid place-items-center gap-2" title="Download" onClick={() => downloadTile(g.url || imageUrl, g.label)}>
@@ -676,14 +689,14 @@ function App() {
                       </div>
                       {/* Mobile persistent icon row */}
                       <div className="flex items-center justify-center gap-3 p-2 sm:hidden">
-                        <button className="btn btn-secondary h-10 w-10 p-0 grid place-items-center" title="Download" onClick={() => downloadTile(g.url || imageUrl, g.label)}>
-                          <Download className="size-5" />
+                        <button className="btn btn-secondary h-12 w-12 p-0 grid place-items-center" title="Download" onClick={() => downloadTile(g.url || imageUrl, g.label)}>
+                          <Download className="size-6" />
                         </button>
-                        <button className="btn btn-secondary h-10 w-10 p-0 grid place-items-center" title="Share" onClick={() => shareTile(g.url || imageUrl)}>
-                          <Share2 className="size-5" />
+                        <button className="btn btn-secondary h-12 w-12 p-0 grid place-items-center" title="Share" onClick={() => shareTile(g.url || imageUrl)}>
+                          <Share2 className="size-6" />
                         </button>
-                        <button className="btn btn-secondary h-10 w-10 p-0 grid place-items-center" title="Copy link" onClick={async () => { await navigator.clipboard.writeText(g.url || imageUrl); toast('Copied link',{icon:'🔗'})}}>
-                          <Link2 className="size-5" />
+                        <button className="btn btn-secondary h-12 w-12 p-0 grid place-items-center" title="Copy link" onClick={async () => { await navigator.clipboard.writeText(g.url || imageUrl); toast('Copied link',{icon:'🔗'})}}>
+                          <Link2 className="size-6" />
                         </button>
                       </div>
                     </div>
@@ -693,9 +706,9 @@ function App() {
             ) : (
               <div className="grid h-[60vh] place-items-center text-slate-400">
                 {isLoading ? (
-                  <div className="w-full max-w-md animate-pulse rounded-xl border border-white/10 bg-slate-900 p-4">
-                    <div className="mb-3 h-48 w-full rounded bg-slate-800" />
-                    <div className="h-4 w-2/3 rounded bg-slate-800" />
+                  <div className="flex flex-col items-center gap-3">
+                    <img src={`${import.meta.env.BASE_URL}logo.svg`} alt="loading" className="h-12 w-12 animate-spin-slow" />
+                    <span className="text-xs">Generating…</span>
                   </div>
                 ) : (
                   <p>Enter a prompt and click Generate to see results</p>
