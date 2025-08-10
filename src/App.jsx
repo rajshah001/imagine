@@ -657,14 +657,13 @@ function App() {
               <div className={classNames('gen-grid grid gap-2 p-2', (()=>{ const c = generated.length; return c===2 ? 'sm:grid-cols-2' : c===4 ? 'sm:grid-cols-2 md:grid-cols-2' : c>=3 ? 'sm:grid-cols-2 lg:grid-cols-3' : '' })())}>
                 {[{url:imageUrl,label:generated[0]?.label, seed: generated[0]?.seed, model: generated[0]?.model}, ...generated.slice(1)].map((g, idx) => {
                   const tileId = (g.label || `v${idx+1}`) + '-' + idx
-                  const showBar = activeTile === tileId
                   return (
                     <div key={(g.url||'base')+idx} className="group relative overflow-hidden rounded-lg border border-white/10 bg-slate-900"
-                         onTouchStart={() => setActiveTile(tileId)}
-                         onClick={() => setActiveTile(activeTile === tileId ? null : tileId)}>
+                         onTouchStart={() => setActiveTile(tileId)}>
                       <div className="absolute left-2 top-2 z-10 rounded bg-slate-950/60 px-2 py-0.5 text-xs">{g.label || `v${idx+1}`}</div>
                       <img src={g.url || imageUrl} alt="Generated" className="w-full object-contain" />
-                      <div className={classNames('pointer-events-auto absolute inset-x-0 bottom-0 z-10 hidden items-center justify-center gap-3 p-3 backdrop-blur-sm text-[13px] md:text-sm group-hover:flex', showBar ? 'flex bg-slate-950/50' : '') }>
+                      {/* Desktop (hover) toolbar overlay */}
+                      <div className="pointer-events-auto absolute inset-x-0 bottom-0 z-10 hidden items-center justify-center gap-3 p-3 backdrop-blur-sm text-[13px] md:text-sm sm:group-hover:flex">
                         <button className="btn btn-secondary h-10 px-3 grid place-items-center gap-2" title="Download" onClick={() => downloadTile(g.url || imageUrl, g.label)}>
                           <Download className="size-5" /> <span className="hidden sm:inline">Download</span>
                         </button>
@@ -673,6 +672,18 @@ function App() {
                         </button>
                         <button className="btn btn-secondary h-10 px-3 grid place-items-center gap-2" title="Copy link" onClick={async () => { await navigator.clipboard.writeText(g.url || imageUrl); toast('Copied link',{icon:'🔗'})}}>
                           <Link2 className="size-5" /> <span className="hidden sm:inline">Copy link</span>
+                        </button>
+                      </div>
+                      {/* Mobile persistent icon row */}
+                      <div className="flex items-center justify-center gap-3 p-2 sm:hidden">
+                        <button className="btn btn-secondary h-10 w-10 p-0 grid place-items-center" title="Download" onClick={() => downloadTile(g.url || imageUrl, g.label)}>
+                          <Download className="size-5" />
+                        </button>
+                        <button className="btn btn-secondary h-10 w-10 p-0 grid place-items-center" title="Share" onClick={() => shareTile(g.url || imageUrl)}>
+                          <Share2 className="size-5" />
+                        </button>
+                        <button className="btn btn-secondary h-10 w-10 p-0 grid place-items-center" title="Copy link" onClick={async () => { await navigator.clipboard.writeText(g.url || imageUrl); toast('Copied link',{icon:'🔗'})}}>
+                          <Link2 className="size-5" />
                         </button>
                       </div>
                     </div>
