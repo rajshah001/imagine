@@ -581,7 +581,7 @@ function App() {
                 <span>Seed: <span className="text-slate-200">{seed}</span></span>
                 <span>Size: <span className="text-slate-200">{width}×{height}</span></span>
               </div>
-              <div className="flex gap-2">
+              <div className="hidden gap-2 sm:flex">
                 <button className="btn" onClick={onGenerate}>
                   <Wand2 className="size-4" />
                   Generate
@@ -594,6 +594,11 @@ function App() {
               <button className="btn btn-secondary w-full" onClick={() => setShowAdvanced((v) => !v)}>
                 {showAdvanced ? 'Hide advanced settings' : 'Show advanced settings'}
               </button>
+              <div className="mt-2 flex justify-center">
+                <button className="btn w-full max-w-xs" onClick={onGenerate}>
+                  <Wand2 className="size-4" /> Generate
+                </button>
+              </div>
               {showAdvanced && (
                 <div className="mt-3 space-y-4">
                   <div>
