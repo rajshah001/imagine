@@ -14,6 +14,24 @@ const MODELS = [
   { value: 'sdxl', label: 'SDXL' },
 ]
 
+const STYLE_PRESETS = [
+  { id: 'cinematic', label: 'Cinematic', text: 'cinematic, film still, dramatic lighting, 35mm' },
+  { id: 'photoreal', label: 'Photoreal', text: 'ultra-realistic, highly detailed, 8k, natural lighting' },
+  { id: 'isometric', label: 'Isometric', text: 'isometric style, clean lines, minimal shadows' },
+  { id: 'watercolor', label: 'Watercolor', text: 'soft watercolor painting, textured paper, delicate brush strokes' },
+  { id: 'cyberpunk', label: 'Cyberpunk', text: 'cyberpunk neon, rain-soaked streets, reflective lights' },
+  { id: 'anime', label: 'Anime', text: 'anime style, vibrant colors, crisp line art' },
+  { id: '3drender', label: '3D Render', text: 'octane render, global illumination, hyper-realistic materials' },
+]
+
+const ASPECT_RATIOS = [
+  { id: '1:1', label: '1:1', w: 1024, h: 1024 },
+  { id: '3:2', label: '3:2', w: 1152, h: 768 },
+  { id: '4:5', label: '4:5', w: 1024, h: 1280 },
+  { id: '16:9', label: '16:9', w: 1280, h: 720 },
+  { id: '9:16', label: '9:16', w: 768, h: 1365 },
+]
+
 function classNames(...values) {
   return values.filter(Boolean).join(' ')
 }
@@ -85,6 +103,8 @@ function App() {
   const [enhance, setEnhance] = useState(false)
   const [safe, setSafe] = useState(true)
   const [seedLocked, setSeedLocked] = useState(false)
+  const [stylePreset, setStylePreset] = useState(null)
+  const [selectedRatio, setSelectedRatio] = useState('1:1')
 
   // Applied parameters (used to actually fetch an image)
   const [appliedPrompt, setAppliedPrompt] = useState(DEFAULT_PROMPT)
@@ -100,7 +120,8 @@ function App() {
 
   const imageUrl = useMemo(() => {
     if (!appliedPrompt) return ''
-    return buildPollinationsUrl(appliedPrompt, {
+    const fullPrompt = stylePreset ? `${appliedPrompt}, ${STYLE_PRESETS.find(p => p.id === stylePreset)?.text ?? ''}` : appliedPrompt
+    return buildPollinationsUrl(fullPrompt, {
       model: appliedModel,
       seed: appliedSeed,
       width: appliedWidth,
@@ -139,6 +160,14 @@ function App() {
   const onRandomizeSeed = () => {
     const newSeed = Math.floor(Math.random() * 10_000)
     setSeed(newSeed)
+  }
+
+  const onSelectRatio = (ratioId) => {
+    const r = ASPECT_RATIOS.find((r) => r.id === ratioId)
+    if (!r) return
+    setSelectedRatio(ratioId)
+    setWidth(r.w)
+    setHeight(r.h)
   }
 
   const onDownload = async () => {
@@ -235,13 +264,58 @@ function App() {
       <main className="mx-auto max-w-6xl px-4 pb-20 pt-6">
         <section className="glass rounded-2xl p-4 md:p-6">
           <div className="flex flex-col gap-4">
-            <label className="label flex items-center gap-2">Prompt <InfoTip align="start" text="Describe exactly what you want in the image. Be specific about subject, style, lighting, composition." /></label>
+            <div className="flex items-center justify-between">
+              <label className="label flex items-center gap-2">Prompt <InfoTip align="start" text="Describe exactly what you want in the image. Be specific about subject, style, lighting, composition." /></label>
+              <div className="flex items-center gap-2 text-xs">
+                <button
+                  className="btn btn-secondary h-8 px-3"
+                  onClick={() => {
+                    const subject = window.prompt('Template: Product shot — enter subject (e.g., smartwatch):')
+                    if (!subject) return
+                    setPrompt(`${subject} product photo, studio lighting, seamless background, high detail`)
+                  }}
+                >Template: Product</button>
+                <button
+                  className="btn btn-secondary h-8 px-3"
+                  onClick={() => {
+                    const subject = window.prompt('Template: Portrait — enter subject (e.g., woman in red dress):')
+                    if (!subject) return
+                    setPrompt(`${subject}, portrait photography, shallow depth of field, soft light`)
+                  }}
+                >Template: Portrait</button>
+              </div>
+            </div>
             <textarea
               className="input min-h-24 resize-y"
               placeholder="Describe what you want to see"
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
             />
+
+            <div className="flex flex-wrap gap-2 pt-1">
+              {STYLE_PRESETS.map((p) => (
+                <button
+                  key={p.id}
+                  className={classNames('rounded-full border px-3 py-1 text-xs', stylePreset === p.id ? 'border-brand-500 bg-brand-600/20 text-white' : 'border-white/10 bg-slate-900 text-slate-300 hover:text-white')}
+                  onClick={() => setStylePreset(stylePreset === p.id ? null : p.id)}
+                  title={p.text}
+                >{p.label}</button>
+              ))}
+              {stylePreset && (
+                <button className="text-xs text-slate-400 underline" onClick={() => setStylePreset(null)}>Clear style</button>
+              )}
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2 pt-1">
+              <span className="label mr-1">Aspect</span>
+              {ASPECT_RATIOS.map((r) => (
+                <button
+                  key={r.id}
+                  className={classNames('rounded-full border px-3 py-1 text-xs', selectedRatio === r.id ? 'border-brand-500 bg-brand-600/20 text-white' : 'border-white/10 bg-slate-900 text-slate-300 hover:text-white')}
+                  onClick={() => onSelectRatio(r.id)}
+                >{r.label}</button>
+              ))}
+            </div>
 
             <div className="grid grid-cols-2 gap-3 md:grid-cols-6">
               <div>
