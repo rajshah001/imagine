@@ -49,3 +49,17 @@ body {
 .label {
   @apply text-sm text-slate-300;
 }
+
+@keyframes slideInUp {
+  from {
+    transform: translateY(12px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+.slide-in-up {
+  animation: slideInUp 500ms ease-out both;
+}
