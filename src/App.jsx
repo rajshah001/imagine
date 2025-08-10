@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import './App.css'
 import { Download, Github, Linkedin, Loader2, Share2, Twitter, Wand2 } from 'lucide-react'
+import Feed from './components/Feed.jsx'
 import toast, { Toaster } from 'react-hot-toast'
 
 const DEFAULT_PROMPT = 'A futuristic city with flying cars and neon lights, ultra-detailed, cinematic lighting, wide angle';
@@ -331,6 +332,8 @@ function App() {
             </button>
           </div>
         </section>
+
+        <Feed onUsePrompt={(p) => setPrompt(p)} />
       </main>
       <footer className="border-t border-white/10 bg-slate-950/70">
         <div className="mx-auto flex max-w-6xl flex-col items-center gap-2 px-4 py-6 text-center text-sm text-slate-400 md:flex-row md:justify-between md:text-left">
