@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Copy } from 'lucide-react'
+import toast from 'react-hot-toast'
 
 function buildUrlFromEvent(event) {
   // Many feeds include 'url'. If absent, try to construct from params we know.
@@ -28,6 +29,7 @@ export default function Feed({ onUsePrompt }) {
   const [autoPaused, setAutoPaused] = useState(false)
   const urls = useRef(new Set())
   const queueRef = useRef([])
+  const itemsLenRef = useRef(0)
 
   useEffect(() => {
     if (!enabled) return
@@ -43,7 +45,17 @@ export default function Feed({ onUsePrompt }) {
           const prompt = data?.prompt || ''
           if (!url || urls.current.has(url)) return
           urls.current.add(url)
-          queueRef.current.push({ url, prompt })
+          const payload = { url, prompt }
+          // Fast-fill up to the first page immediately
+          if (itemsLenRef.current < PAGE_SIZE) {
+            setItems((prev) => {
+              const merged = [payload, ...prev]
+              if (merged.length > MAX_HISTORY) merged.length = MAX_HISTORY
+              return merged
+            })
+          } else {
+            queueRef.current.push(payload)
+          }
         } catch (_) {
           // ignore malformed events
         }
@@ -61,8 +73,13 @@ export default function Feed({ onUsePrompt }) {
     }
   }, [enabled])
 
+  // Track current items length
+  useEffect(() => { itemsLenRef.current = items.length }, [items.length])
+
   // Gradually move items from queue into the list to avoid overwhelming UI
   useEffect(() => {
+    // Don't start slow ingestion until first page is filled
+    if (items.length < PAGE_SIZE) return
     // Much slower ingestion to avoid overwhelming UI/network
     const intervalMs = speed === 'slow' ? 30000 : 15000
     const id = setInterval(() => {
@@ -76,7 +93,7 @@ export default function Feed({ onUsePrompt }) {
       })
     }, intervalMs)
     return () => clearInterval(id)
-  }, [enabled, speed])
+  }, [enabled, speed, items.length])
 
   const visible = useMemo(() => items.slice(pageStart, pageStart + PAGE_SIZE), [items, pageStart])
 
@@ -98,30 +115,24 @@ export default function Feed({ onUsePrompt }) {
     return (
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
         {visible.map((item, idx) => (
-          <figure key={item.url + idx} className="group relative overflow-hidden rounded-xl border border-white/10 bg-slate-900 slide-in-up">
+          <figure key={item.url + idx} className="group overflow-hidden rounded-xl border border-white/10 bg-slate-900 slide-in-up">
             <img src={item.url} alt={item.prompt || 'Pollinations image'} className="aspect-square w-full object-cover" />
-
-            <figcaption className="pointer-events-none absolute inset-x-0 bottom-0 translate-y-2 opacity-0 transition-all group-hover:translate-y-0 group-hover:opacity-100">
-              <div className="m-2 rounded-lg bg-slate-950/80 p-2 shadow-lg backdrop-blur-md">
-                <div className="pointer-events-auto flex items-center gap-2 p-1 text-xs text-slate-200">
-                  <button
-                    className="btn btn-secondary h-7 px-2 text-xs"
-                    onClick={() => onUsePrompt?.(item.prompt || '')}
-                  >
-                    Use prompt
-                  </button>
-                  <button
-                    className="inline-flex h-7 items-center justify-center rounded-md bg-slate-800 px-2 text-slate-300 hover:bg-slate-700"
-                    onClick={async () => {
-                      await navigator.clipboard.writeText(item.prompt || '')
-                    }}
-                    title="Copy prompt"
-                  >
-                    <Copy className="size-3.5" />
-                  </button>
-                  <span className="line-clamp-2" title={item.prompt}>{item.prompt || '—'}</span>
-                </div>
-              </div>
+            <figcaption className="grid grid-cols-2 gap-2 p-2 text-xs">
+              <button
+                className="btn btn-secondary h-8 text-xs"
+                onClick={() => onUsePrompt?.(item.prompt || '')}
+              >
+                Use prompt
+              </button>
+              <button
+                className="btn btn-secondary h-8 text-xs"
+                onClick={async () => {
+                  await navigator.clipboard.writeText(item.url)
+                  toast('Copied image link', { icon: '🔗' })
+                }}
+              >
+                Copy link
+              </button>
             </figcaption>
           </figure>
         ))}
