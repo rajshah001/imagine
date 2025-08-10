@@ -12,6 +12,7 @@
     "deploy": "GITHUB_PAGES=true gh-pages -d dist"
   },
   "dependencies": {
+    "@radix-ui/react-tooltip": "^1.2.7",
     "lucide-react": "^0.539.0",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
