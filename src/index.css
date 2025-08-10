@@ -68,9 +68,7 @@ body {
   animation: slideInUp 500ms ease-out both;
 }
 
-.gen-grid img {
-  aspect-ratio: 1 / 1;
-}
+.gen-grid img { @apply block w-full h-auto; }
 
 @keyframes fadeIn {
   from { opacity: 0 }

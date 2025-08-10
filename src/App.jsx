@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import './App.css'
-import { Download, Github, Linkedin, Loader2, Share2, Twitter, Wand2, Shuffle } from 'lucide-react'
+import { Download, Github, Linkedin, Loader2, Share2, Twitter, Wand2, Shuffle, Link2 } from 'lucide-react'
 import Feed from './components/Feed.jsx'
 import History from './components/History.jsx'
 import { useHistoryStore } from './state/history.jsx'
@@ -142,6 +142,14 @@ function App() {
   const [modelB, setModelB] = useState(MODELS[1]?.value || MODELS[0].value)
   const [generated, setGenerated] = useState([]) // {url,label}
   const [isSurprising, setIsSurprising] = useState(false)
+  const [isTouch, setIsTouch] = useState(false)
+  const [activeTile, setActiveTile] = useState(null)
+
+  useEffect(() => {
+    try {
+      setIsTouch('ontouchstart' in window || navigator.maxTouchPoints > 0)
+    } catch {}
+  }, [])
 
   const imageUrl = useMemo(() => {
     if (!appliedPrompt) return ''
@@ -190,7 +198,7 @@ function App() {
           safe,
           bust: newBust + order,
         })
-        urlsForHistory.push({ url, label: abCompare ? (m === model ? `A-${s}` : `B-${s}`) : `v${order + 1}` })
+        urlsForHistory.push({ url, label: abCompare ? (m === model ? `A-${s}` : `B-${s}`) : `v${order + 1}`, seed: s, model: m })
         order += 1
       }
     }
@@ -347,6 +355,36 @@ function App() {
     toast('Copied image URL', { icon: '🔗' })
   }
 
+  const downloadTile = async (tileUrl, label = 'image') => {
+    try {
+      const res = await fetch(tileUrl)
+      const blob = await res.blob()
+      const objectUrl = URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = objectUrl
+      link.download = `${label}-${appliedModel}-${appliedWidth}x${appliedHeight}.png`
+      document.body.appendChild(link); link.click(); link.remove()
+      URL.revokeObjectURL(objectUrl)
+    } catch {
+      toast.error('Download failed')
+    }
+  }
+
+  const shareTile = async (tileUrl) => {
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: 'Generated with Pollinations', url: tileUrl })
+        return
+      }
+      await navigator.clipboard.writeText(tileUrl)
+      toast('Link copied', { icon: '🔗' })
+    } catch {
+      toast.error('Share failed')
+    }
+  }
+
+  // removed per request: settings link & markdown helpers
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950">
       <Toaster position="top-right" />
@@ -431,6 +469,7 @@ function App() {
             />
 
             <div className="flex flex-wrap gap-2 pt-1">
+              <span className="label mr-1">Style <InfoTip align="start" text="Select a style for your image."></InfoTip></span>
               <button
                 key="none"
                 className={classNames('rounded-full border px-3 py-1 text-xs', !stylePreset ? 'border-brand-500 bg-brand-600/20 text-white' : 'border-white/10 bg-slate-900 text-slate-300 hover:text-white')}
@@ -448,7 +487,7 @@ function App() {
             </div>
 
             <div className="flex flex-wrap items-center gap-2 pt-1">
-              <span className="label mr-1">Aspect</span>
+              <span className="label mr-1">Aspect <InfoTip align="start" text="Select an aspect ratio for your image."></InfoTip></span>
               {ASPECT_RATIOS.map((r) => (
                 <button
                   key={r.id}
@@ -565,64 +604,45 @@ function App() {
             )}
 
             {imageUrl ? (
-              <div className={classNames('gen-grid grid gap-2 p-2', (()=>{ const c = generated.length; return c===2 ? 'grid-cols-2' : c>=3 ? 'sm:grid-cols-2 lg:grid-cols-3' : '' })())}>
-                <div className="relative">
-                  <img src={imageUrl} alt="Generated"
-                       className={classNames('w-full object-contain transition-opacity', isLoading ? 'opacity-70' : 'opacity-100')}
-                       onLoad={() => {
-                         if (lastShownBust !== bust) { setLastShownBust(bust); toast.success('Generation complete') }
-                       }}
-                  />
-                  {generated.length>0 && <div className="absolute left-2 top-2 rounded bg-slate-950/60 px-2 py-0.5 text-xs">{generated[0]?.label || 'v1'}</div>}
-                </div>
-                {generated.slice(1).map((g)=> (
-                  <div key={g.url} className="relative">
-                    <img src={g.url} alt="Generated variation" className="w-full object-contain" />
-                    <div className="absolute left-2 top-2 rounded bg-slate-950/60 px-2 py-0.5 text-xs">{g.label}</div>
-                  </div>
-                ))}
+              <div className={classNames('gen-grid grid gap-2 p-2', (()=>{ const c = generated.length; return c===2 ? 'grid-cols-2' : c===4 ? 'grid-cols-2 md:grid-cols-2' : c>=3 ? 'sm:grid-cols-2 lg:grid-cols-3' : '' })())}>
+                {[{url:imageUrl,label:generated[0]?.label, seed: generated[0]?.seed, model: generated[0]?.model}, ...generated.slice(1)].map((g, idx) => {
+                  const tileId = (g.label || `v${idx+1}`) + '-' + idx
+                  const showBar = isTouch || activeTile === tileId
+                  return (
+                    <div key={(g.url||'base')+idx} className="group relative overflow-hidden rounded-lg border border-white/10 bg-slate-900"
+                         onTouchStart={() => setActiveTile(tileId)}>
+                      <div className="absolute left-2 top-2 z-10 rounded bg-slate-950/60 px-2 py-0.5 text-xs">{g.label || `v${idx+1}`}</div>
+                      <img src={g.url || imageUrl} alt="Generated" className="w-full object-contain" />
+                      <div className={classNames('pointer-events-auto absolute inset-x-0 bottom-0 z-10 flex items-center justify-center gap-3 p-3 backdrop-blur-sm transition-opacity text-[13px] md:text-sm', showBar ? 'opacity-100 bg-slate-950/50' : 'opacity-0 group-hover:opacity-100 bg-slate-950/50') }>
+                        <button className="btn btn-secondary h-10 px-3 grid place-items-center gap-2" title="Download" onClick={() => downloadTile(g.url || imageUrl, g.label)}>
+                          <Download className="size-5" /> <span className="hidden sm:inline">Download</span>
+                        </button>
+                        <button className="btn btn-secondary h-10 px-3 grid place-items-center gap-2" title="Share" onClick={() => shareTile(g.url || imageUrl)}>
+                          <Share2 className="size-5" /> <span className="hidden sm:inline">Share</span>
+                        </button>
+                        <button className="btn btn-secondary h-10 px-3 grid place-items-center gap-2" title="Copy link" onClick={async () => { await navigator.clipboard.writeText(g.url || imageUrl); toast('Copied link',{icon:'🔗'})}}>
+                          <Link2 className="size-5" /> <span className="hidden sm:inline">Copy link</span>
+                        </button>
+                      </div>
+                    </div>
+                  )
+                })}
               </div>
             ) : (
               <div className="grid h-[60vh] place-items-center text-slate-400">
-                <p>Enter a prompt and click Generate to see results</p>
+                {isLoading ? (
+                  <div className="w-full max-w-md animate-pulse rounded-xl border border-white/10 bg-slate-900 p-4">
+                    <div className="mb-3 h-48 w-full rounded bg-slate-800" />
+                    <div className="h-4 w-2/3 rounded bg-slate-800" />
+                  </div>
+                ) : (
+                  <p>Enter a prompt and click Generate to see results</p>
+                )}
               </div>
             )}
       </div>
 
-          <div className="mt-4 flex flex-wrap items-center gap-2">
-            <button className="btn" onClick={onDownload} disabled={!imageUrl}>
-              <Download className="size-4" /> Download
-            </button>
-            <button className="btn btn-secondary" onClick={onShare} disabled={!imageUrl}>
-              <Share2 className="size-4" /> Share
-            </button>
-            <button className="btn btn-secondary" onClick={onCopyLink} disabled={!imageUrl}>
-              Copy link
-            </button>
-            <button className="btn btn-secondary" onClick={async () => {
-              const url = new URL(window.location.href)
-              url.searchParams.set('prompt', prompt)
-              url.searchParams.set('model', model)
-              url.searchParams.set('seed', String(seed))
-              url.searchParams.set('width', String(width))
-              url.searchParams.set('height', String(height))
-              url.searchParams.set('nologo', String(nologo))
-              url.searchParams.set('enhance', String(enhance))
-              if (stylePreset) url.searchParams.set('preset', stylePreset); else url.searchParams.delete('preset')
-              await navigator.clipboard.writeText(url.toString())
-              toast('Settings link copied', { icon: '🔗' })
-            }} disabled={!prompt}>
-              Copy settings link
-            </button>
-            <button className="btn btn-secondary" onClick={async () => {
-              if (!imageUrl) return
-              const md = `![${appliedPrompt?.slice(0,80) || 'image'}](${imageUrl})`
-              await navigator.clipboard.writeText(md)
-              toast('Markdown copied', { icon: '📝' })
-            }} disabled={!imageUrl}>
-              Copy Markdown
-        </button>
-          </div>
+          {/* Per-requested change: removed global action buttons in favor of per-tile actions */}
         </section>
         )}
 
