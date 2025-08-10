@@ -98,25 +98,30 @@ export default function Feed({ onUsePrompt }) {
     return (
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
         {visible.map((item, idx) => (
-          <figure key={item.url + idx} className="group overflow-hidden rounded-xl border border-white/10 bg-slate-900 slide-in-up">
+          <figure key={item.url + idx} className="group relative overflow-hidden rounded-xl border border-white/10 bg-slate-900 slide-in-up">
             <img src={item.url} alt={item.prompt || 'Pollinations image'} className="aspect-square w-full object-cover" />
-            <figcaption className="flex items-center gap-2 p-2 text-xs text-slate-300">
-              <button
-                className="btn btn-secondary h-7 px-2 text-xs"
-                onClick={() => onUsePrompt?.(item.prompt || '')}
-              >
-                Use prompt
-              </button>
-              <button
-                className="inline-flex h-7 items-center justify-center rounded-md bg-slate-800 px-2 text-slate-300 hover:bg-slate-700"
-                onClick={async () => {
-                  await navigator.clipboard.writeText(item.prompt || '')
-                }}
-                title="Copy prompt"
-              >
-                <Copy className="size-3.5" />
-              </button>
-              <span className="line-clamp-2" title={item.prompt}>{item.prompt || '—'}</span>
+
+            <figcaption className="pointer-events-none absolute inset-x-0 bottom-0 translate-y-2 opacity-0 transition-all group-hover:translate-y-0 group-hover:opacity-100">
+              <div className="m-2 rounded-lg bg-slate-950/80 p-2 shadow-lg backdrop-blur-md">
+                <div className="pointer-events-auto flex items-center gap-2 p-1 text-xs text-slate-200">
+                  <button
+                    className="btn btn-secondary h-7 px-2 text-xs"
+                    onClick={() => onUsePrompt?.(item.prompt || '')}
+                  >
+                    Use prompt
+                  </button>
+                  <button
+                    className="inline-flex h-7 items-center justify-center rounded-md bg-slate-800 px-2 text-slate-300 hover:bg-slate-700"
+                    onClick={async () => {
+                      await navigator.clipboard.writeText(item.prompt || '')
+                    }}
+                    title="Copy prompt"
+                  >
+                    <Copy className="size-3.5" />
+                  </button>
+                  <span className="line-clamp-2" title={item.prompt}>{item.prompt || '—'}</span>
+                </div>
+              </div>
             </figcaption>
           </figure>
         ))}
