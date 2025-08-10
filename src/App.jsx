@@ -253,13 +253,13 @@ function App() {
                 </select>
               </div>
 
-              <div>
+              <div className="md:col-span-2">
                 <label className="label flex items-center gap-1">Seed <InfoTip align="start" text="Randomness control. Same prompt + same seed gives repeatable results. Toggle lock to keep the same seed between runs." /></label>
                 <div className="flex items-center gap-2">
-                  <input className="input" type="number" value={seed}
+                  <input className="input w-28 sm:w-32 md:w-36" type="number" value={seed}
                          onChange={(e) => setSeed(Number(e.target.value))} />
-                  <button className="btn btn-secondary" onClick={onRandomizeSeed}>Random</button>
-                  <label className="ml-2 inline-flex items-center gap-2 text-xs text-slate-300">
+                  <button className="btn btn-secondary whitespace-nowrap" onClick={onRandomizeSeed}>Random</button>
+                  <label className="ml-2 inline-flex items-center gap-2 text-xs text-slate-300 whitespace-nowrap">
                     <input type="checkbox" className="size-4" checked={seedLocked} onChange={(e) => setSeedLocked(e.target.checked)} />
                     Lock
                   </label>
