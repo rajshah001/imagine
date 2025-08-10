@@ -144,10 +144,18 @@ function App() {
   const [isSurprising, setIsSurprising] = useState(false)
   const [isTouch, setIsTouch] = useState(false)
   const [activeTile, setActiveTile] = useState(null)
+  const [showAdvanced, setShowAdvanced] = useState(false)
+  const [showTemplates, setShowTemplates] = useState(false)
 
   useEffect(() => {
     try {
       setIsTouch('ontouchstart' in window || navigator.maxTouchPoints > 0)
+    } catch {}
+    try {
+      const m = window.matchMedia('(min-width: 640px)')
+      setShowAdvanced(m.matches)
+      const handler = (e) => setShowAdvanced(e.matches)
+      m.addEventListener ? m.addEventListener('change', handler) : m.addListener(handler)
     } catch {}
   }, [])
 
@@ -507,7 +515,7 @@ function App() {
                 </select>
               </div>
 
-              <div className="md:col-span-2">
+              <div className="md:col-span-2 hidden sm:block">
                 <label className="label flex items-center gap-1">Seed <InfoTip align="start" text="Randomness control. Same prompt + same seed gives repeatable results. Toggle lock to keep the same seed between runs." /></label>
                 <div className="flex items-center gap-2">
                   <input className="input w-28 sm:w-32 md:w-36" type="number" value={seed}
@@ -532,13 +540,13 @@ function App() {
                        onChange={(e) => setHeight(Number(e.target.value))} />
               </div>
 
-              <div className="flex items-center gap-2 pt-6">
+              <div className="hidden items-center gap-2 pt-6 sm:flex">
                 <input id="nologo" type="checkbox" className="size-4" checked={nologo}
                        onChange={(e) => setNologo(e.target.checked)} />
                 <label htmlFor="nologo" className="label flex items-center gap-1">No logo <InfoTip align="start" text="Removes any provider watermarks where possible." /></label>
               </div>
 
-              <div className="flex items-center gap-2 pt-6">
+              <div className="hidden items-center gap-2 pt-6 sm:flex">
                 <input id="enhance" type="checkbox" className="size-4" checked={enhance}
                        onChange={(e) => setEnhance(e.target.checked)} />
                 <label htmlFor="enhance" className="label flex items-center gap-1">Enhance <InfoTip align="start" text="Extra post-processing for sharpness and detail." /></label>
@@ -551,7 +559,7 @@ function App() {
                   <option value={4}>4</option>
                 </select>
               </div>
-              <div className="md:col-span-2 flex items-center gap-3 pt-6">
+              <div className="hidden md:col-span-2 items-center gap-3 pt-6 sm:flex">
                 <input id="ab" type="checkbox" className="size-4" checked={abCompare} onChange={(e)=>setAbCompare(e.target.checked)} />
                 <label htmlFor="ab" className="label flex items-center gap-1">A/B Compare <InfoTip text="Render the same prompt with two models side-by-side." /></label>
                 {abCompare && (
@@ -573,12 +581,49 @@ function App() {
                 <span>Seed: <span className="text-slate-200">{seed}</span></span>
                 <span>Size: <span className="text-slate-200">{width}×{height}</span></span>
               </div>
-              <div className="flex gap-2">
+              <div className="hidden gap-2 sm:flex">
                 <button className="btn" onClick={onGenerate}>
                   <Wand2 className="size-4" />
                   Apply Changes
                 </button>
               </div>
+            </div>
+
+            {/* Mobile Advanced Settings */}
+            <div className="sm:hidden">
+              <button className="btn btn-secondary w-full" onClick={() => setShowAdvanced((v) => !v)}>
+                {showAdvanced ? 'Hide advanced settings' : 'Show advanced settings'}
+              </button>
+              {showAdvanced && (
+                <div className="mt-3 space-y-4">
+                  <div>
+                    <label className="label">Seed</label>
+                    <div className="mt-1 flex items-center gap-2">
+                      <input className="input w-28" type="number" value={seed} onChange={(e) => setSeed(Number(e.target.value))} />
+                      <button className="btn btn-secondary" onClick={onRandomizeSeed}>Random</button>
+                      <label className="ml-2 inline-flex items-center gap-2 text-xs text-slate-300 whitespace-nowrap">
+                        <input type="checkbox" className="size-4" checked={seedLocked} onChange={(e) => setSeedLocked(e.target.checked)} />
+                        Lock
+                      </label>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <label className="inline-flex items-center gap-2"><input type="checkbox" className="size-4" checked={nologo} onChange={(e) => setNologo(e.target.checked)} /> <span className="label">No logo</span></label>
+                    <label className="inline-flex items-center gap-2"><input type="checkbox" className="size-4" checked={enhance} onChange={(e) => setEnhance(e.target.checked)} /> <span className="label">Enhance</span></label>
+                  </div>
+                  <div>
+                    <label className="inline-flex items-center gap-2"><input type="checkbox" className="size-4" checked={abCompare} onChange={(e)=> setAbCompare(e.target.checked)} /> <span className="label">A/B Compare</span></label>
+                    {abCompare && (
+                      <div className="mt-2">
+                        <span className="text-xs text-slate-400 mr-2">Model B</span>
+                        <select className="input inline-block w-44" value={modelB} onChange={(e)=> setModelB(e.target.value)}>
+                          {MODELS.map((m)=> (<option key={m.value} value={m.value}>{m.label}</option>))}
+                        </select>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </section>
@@ -604,7 +649,7 @@ function App() {
             )}
 
             {imageUrl ? (
-              <div className={classNames('gen-grid grid gap-2 p-2', (()=>{ const c = generated.length; return c===2 ? 'grid-cols-2' : c===4 ? 'grid-cols-2 md:grid-cols-2' : c>=3 ? 'sm:grid-cols-2 lg:grid-cols-3' : '' })())}>
+              <div className={classNames('gen-grid grid gap-2 p-2', (()=>{ const c = generated.length; return c===2 ? 'sm:grid-cols-2' : c===4 ? 'sm:grid-cols-2 md:grid-cols-2' : c>=3 ? 'sm:grid-cols-2 lg:grid-cols-3' : '' })())}>
                 {[{url:imageUrl,label:generated[0]?.label, seed: generated[0]?.seed, model: generated[0]?.model}, ...generated.slice(1)].map((g, idx) => {
                   const tileId = (g.label || `v${idx+1}`) + '-' + idx
                   const showBar = isTouch || activeTile === tileId
@@ -613,7 +658,7 @@ function App() {
                          onTouchStart={() => setActiveTile(tileId)}>
                       <div className="absolute left-2 top-2 z-10 rounded bg-slate-950/60 px-2 py-0.5 text-xs">{g.label || `v${idx+1}`}</div>
                       <img src={g.url || imageUrl} alt="Generated" className="w-full object-contain" />
-                      <div className={classNames('pointer-events-auto absolute inset-x-0 bottom-0 z-10 flex items-center justify-center gap-3 p-3 backdrop-blur-sm transition-opacity text-[13px] md:text-sm', showBar ? 'opacity-100 bg-slate-950/50' : 'opacity-0 group-hover:opacity-100 bg-slate-950/50') }>
+                      <div className={classNames('pointer-events-auto absolute inset-x-0 bottom-0 z-10 hidden items-center justify-center gap-3 p-3 backdrop-blur-sm text-[13px] md:text-sm group-hover:flex', showBar ? 'flex bg-slate-950/50' : '') }>
                         <button className="btn btn-secondary h-10 px-3 grid place-items-center gap-2" title="Download" onClick={() => downloadTile(g.url || imageUrl, g.label)}>
                           <Download className="size-5" /> <span className="hidden sm:inline">Download</span>
                         </button>
@@ -661,6 +706,7 @@ function App() {
           }} />
         )}
       </main>
+      {/* Sticky mobile bar removed per request */}
       <footer className="border-t border-white/10 bg-slate-950/70">
         <div className="mx-auto flex max-w-6xl flex-col items-center gap-2 px-4 py-6 text-center text-sm text-slate-400 md:flex-row md:justify-between md:text-left">
           <p>

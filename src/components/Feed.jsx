@@ -30,6 +30,8 @@ export default function Feed({ onUsePrompt }) {
   const urls = useRef(new Set())
   const queueRef = useRef([])
   const itemsLenRef = useRef(0)
+  const retryTimerRef = useRef(null)
+  const [retryCount, setRetryCount] = useState(0)
 
   useEffect(() => {
     if (!enabled) return
@@ -62,16 +64,23 @@ export default function Feed({ onUsePrompt }) {
       }
       source.onerror = () => {
         setError('Feed temporarily unavailable')
-        source.close()
+        try { source.close() } catch {}
+        if (!cancelled) {
+          clearTimeout(retryTimerRef.current)
+          retryTimerRef.current = setTimeout(() => setRetryCount((c) => c + 1), 12000)
+        }
       }
     } catch (err) {
       setError('Unable to connect to feed')
+      clearTimeout(retryTimerRef.current)
+      retryTimerRef.current = setTimeout(() => setRetryCount((c) => c + 1), 12000)
     }
     return () => {
       cancelled = true
+      clearTimeout(retryTimerRef.current)
       try { source && source.close() } catch { /* noop */ }
     }
-  }, [enabled])
+  }, [enabled, retryCount])
 
   // Track current items length
   useEffect(() => { itemsLenRef.current = items.length }, [items.length])
