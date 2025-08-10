@@ -1,91 +1,54 @@
-import { useId, useLayoutEffect, useRef, useState } from 'react'
-import { Info } from 'lucide-react'
+import { useEffect, useId, useRef, useState } from 'react'
 
-export default function InfoTip({ text, side = 'top', align = 'start', className = '' }) {
+export default function InfoTip({ text, side = 'top', align = 'center' }) {
   const [open, setOpen] = useState(false)
-  const id = useId()
-  const btnRef = useRef(null)
-  const tipRef = useRef(null)
-  const [coords, setCoords] = useState({ top: 0, left: 0 })
+  const tipId = useId()
+  const ref = useRef(null)
 
-  useLayoutEffect(() => {
-    if (!open || !btnRef.current) return
-
-    const compute = () => {
-      const buttonRect = btnRef.current.getBoundingClientRect()
-      const tipEl = tipRef.current
-      const viewportW = window.innerWidth
-      const viewportH = window.innerHeight
-      const margin = 8
-      const pref = side
-
-      // Temporary size estimate before render
-      const tipW = (tipEl?.offsetWidth || 280)
-      const tipH = (tipEl?.offsetHeight || 80)
-
-      // Try preferred placement; if clipped at top, flip to bottom
-      let top = pref === 'bottom'
-        ? buttonRect.bottom + margin
-        : buttonRect.top - tipH - margin
-      if (top < margin) top = buttonRect.bottom + margin
-      if (top + tipH > viewportH - margin) top = Math.max(margin, viewportH - tipH - margin)
-
-      // Horizontal alignment relative to the button
-      let left
-      if (align === 'end') {
-        left = buttonRect.right - tipW
-      } else if (align === 'center') {
-        left = buttonRect.left + (buttonRect.width / 2) - (tipW / 2)
-      } else {
-        // start
-        left = buttonRect.left
-      }
-      if (left < margin) left = margin
-      if (left + tipW > viewportW - margin) left = Math.max(margin, viewportW - tipW - margin)
-      setCoords({ top, left })
+  useEffect(() => {
+    if (!open) return
+    const onDoc = (e) => {
+      if (!ref.current) return
+      if (!ref.current.contains(e.target)) setOpen(false)
     }
-
-    compute()
-    const onScroll = () => compute()
-    const onResize = () => compute()
-    window.addEventListener('scroll', onScroll, true)
-    window.addEventListener('resize', onResize)
+    const onKey = (e) => { if (e.key === 'Escape') setOpen(false) }
+    document.addEventListener('pointerdown', onDoc)
+    window.addEventListener('keydown', onKey)
     return () => {
-      window.removeEventListener('scroll', onScroll, true)
-      window.removeEventListener('resize', onResize)
+      document.removeEventListener('pointerdown', onDoc)
+      window.removeEventListener('keydown', onKey)
     }
-  }, [open, side])
+  }, [open])
+
+  const positionClasses = {
+    top: `bottom-full mb-2 ${align === 'start' ? 'left-0' : align === 'end' ? 'right-0' : 'left-1/2 -translate-x-1/2'}`,
+    bottom: `top-full mt-2 ${align === 'start' ? 'left-0' : align === 'end' ? 'right-0' : 'left-1/2 -translate-x-1/2'}`,
+  }[side]
+
+  const arrowSide = side === 'top' ? 'bottom-[-6px]' : 'top-[-6px]'
 
   return (
-    <span className={`relative inline-flex ${className}`} onMouseLeave={() => setOpen(false)}>
+    <span ref={ref} className="relative inline-flex items-center">
       <button
         type="button"
-        aria-label="More info"
-        aria-describedby={id}
-        className="inline-flex h-5 w-5 items-center justify-center rounded-full border border-white/20 bg-slate-900 text-slate-300 hover:text-white"
+        aria-describedby={open ? tipId : undefined}
         onMouseEnter={() => setOpen(true)}
+        onMouseLeave={() => setOpen(false)}
         onFocus={() => setOpen(true)}
         onBlur={() => setOpen(false)}
         onClick={() => setOpen((v) => !v)}
-        ref={btnRef}
+        className="inline-flex h-5 w-5 items-center justify-center rounded-full border border-white/15 bg-slate-800 text-[10px] leading-none text-slate-300 hover:text-white"
       >
-        <Info className="h-3.5 w-3.5" />
+        i
       </button>
-
       {open && (
         <div
-          id={id}
+          id={tipId}
           role="tooltip"
-          ref={tipRef}
-          className={`pointer-events-none fixed z-50 rounded-lg border border-white/10 bg-slate-900/95 px-3 py-2 text-xs text-slate-200 shadow-lg backdrop-blur-md`}
-          style={{
-            top: `${coords.top}px`,
-            left: `${coords.left}px`,
-            maxWidth: 'min(360px, calc(100vw - 24px))',
-            width: 'max-content'
-          }}
+          className={`animate-fade pointer-events-none absolute z-30 max-w-xs rounded-md border border-white/10 bg-slate-900/95 p-2 text-xs text-slate-200 shadow-lg backdrop-blur-md ${positionClasses}`}
         >
           {text}
+          <span className={`absolute left-1/2 -ml-1 h-2 w-2 rotate-45 border border-white/10 bg-slate-900/95 ${arrowSide}`}></span>
         </div>
       )}
     </span>

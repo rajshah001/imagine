@@ -63,3 +63,9 @@ body {
 .slide-in-up {
   animation: slideInUp 500ms ease-out both;
 }
+
+@keyframes fadeIn {
+  from { opacity: 0 }
+  to { opacity: 1 }
+}
+.animate-fade { animation: fadeIn 180ms ease-out both }
