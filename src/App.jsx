@@ -225,7 +225,7 @@ function App() {
       <main className="mx-auto max-w-6xl px-4 pb-20 pt-6">
         <section className="glass rounded-2xl p-4 md:p-6">
           <div className="flex flex-col gap-4">
-            <label className="label flex items-center gap-2">Prompt <InfoTip text="Describe exactly what you want in the image. Be specific about subject, style, lighting, composition." /></label>
+            <label className="label flex items-center gap-2">Prompt <InfoTip align="start" text="Describe exactly what you want in the image. Be specific about subject, style, lighting, composition." /></label>
             <textarea
               className="input min-h-24 resize-y"
               placeholder="Describe what you want to see"
@@ -235,7 +235,7 @@ function App() {
 
             <div className="grid grid-cols-2 gap-3 md:grid-cols-6">
               <div>
-                <label className="label flex items-center gap-1">Model <InfoTip text="Image generation model to use. Different models give different styles." /></label>
+                <label className="label flex items-center gap-1">Model <InfoTip align="start" text="Image generation model to use. Different models give different styles." /></label>
                 <select className="input" value={model} onChange={(e) => setModel(e.target.value)}>
                   {MODELS.map((m) => (
                     <option key={m.value} value={m.value}>{m.label}</option>
@@ -244,7 +244,7 @@ function App() {
               </div>
 
               <div>
-                <label className="label flex items-center gap-1">Seed <InfoTip text="Randomness control. Same prompt + same seed gives repeatable results." /></label>
+                <label className="label flex items-center gap-1">Seed <InfoTip align="start" text="Randomness control. Same prompt + same seed gives repeatable results." /></label>
                 <div className="flex gap-2">
                   <input className="input" type="number" value={seed}
                          onChange={(e) => setSeed(Number(e.target.value))} />
@@ -253,13 +253,13 @@ function App() {
               </div>
 
               <div>
-                <label className="label flex items-center gap-1">Width <InfoTip text="Output image width in pixels." /></label>
+                <label className="label flex items-center gap-1">Width <InfoTip align="start" text="Output image width in pixels." /></label>
                 <input className="input" type="number" value={width}
                        onChange={(e) => setWidth(Number(e.target.value))} />
               </div>
 
               <div>
-                <label className="label flex items-center gap-1">Height <InfoTip text="Output image height in pixels." /></label>
+                <label className="label flex items-center gap-1">Height <InfoTip align="start" text="Output image height in pixels." /></label>
                 <input className="input" type="number" value={height}
                        onChange={(e) => setHeight(Number(e.target.value))} />
               </div>
@@ -267,13 +267,13 @@ function App() {
               <div className="flex items-center gap-2 pt-6">
                 <input id="nologo" type="checkbox" className="size-4" checked={nologo}
                        onChange={(e) => setNologo(e.target.checked)} />
-                <label htmlFor="nologo" className="label flex items-center gap-1">No logo <InfoTip text="Removes any provider watermarks where possible." /></label>
+                <label htmlFor="nologo" className="label flex items-center gap-1">No logo <InfoTip align="start" text="Removes any provider watermarks where possible." /></label>
               </div>
 
               <div className="flex items-center gap-2 pt-6">
                 <input id="enhance" type="checkbox" className="size-4" checked={enhance}
                        onChange={(e) => setEnhance(e.target.checked)} />
-                <label htmlFor="enhance" className="label flex items-center gap-1">Enhance <InfoTip text="Extra post-processing for sharpness and detail." /></label>
+                <label htmlFor="enhance" className="label flex items-center gap-1">Enhance <InfoTip align="start" text="Extra post-processing for sharpness and detail." /></label>
               </div>
             </div>
 

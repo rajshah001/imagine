@@ -1,7 +1,7 @@
 import { useId, useLayoutEffect, useRef, useState } from 'react'
 import { Info } from 'lucide-react'
 
-export default function InfoTip({ text, side = 'top', className = '' }) {
+export default function InfoTip({ text, side = 'top', align = 'start', className = '' }) {
   const [open, setOpen] = useState(false)
   const id = useId()
   const btnRef = useRef(null)
@@ -30,8 +30,16 @@ export default function InfoTip({ text, side = 'top', className = '' }) {
       if (top < margin) top = buttonRect.bottom + margin
       if (top + tipH > viewportH - margin) top = Math.max(margin, viewportH - tipH - margin)
 
-      // Center horizontally; then clamp within viewport
-      let left = buttonRect.left + (buttonRect.width / 2) - (tipW / 2)
+      // Horizontal alignment relative to the button
+      let left
+      if (align === 'end') {
+        left = buttonRect.right - tipW
+      } else if (align === 'center') {
+        left = buttonRect.left + (buttonRect.width / 2) - (tipW / 2)
+      } else {
+        // start
+        left = buttonRect.left
+      }
       if (left < margin) left = margin
       if (left + tipW > viewportW - margin) left = Math.max(margin, viewportW - tipW - margin)
       setCoords({ top, left })
