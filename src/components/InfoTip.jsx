@@ -1,6 +1,7 @@
 import { useEffect, useId, useRef, useState } from 'react'
 
-export default function InfoTip({ text, side = 'auto', align = 'center' }) {
+// side: 'auto-bottom' (default), 'auto-top', 'top', 'bottom'
+export default function InfoTip({ text, side = 'auto-bottom', align = 'center' }) {
   const [open, setOpen] = useState(false)
   const tipId = useId()
   const ref = useRef(null)
@@ -30,11 +31,19 @@ export default function InfoTip({ text, side = 'auto', align = 'center' }) {
       if (!el) return
       const rect = el.getBoundingClientRect()
       const margin = 12
-      // Side: prefer top, but if close to top viewport (e.g., under navbar), flip to bottom
-      const preferredTop = side === 'auto' || side === 'top'
-      let newSide = preferredTop ? 'top' : 'bottom'
-      if (preferredTop && rect.top < 72 + margin) newSide = 'bottom'
+      // Side preference
+      const preferBottom = side === 'bottom' || side === 'auto-bottom'
+      let newSide = preferBottom ? 'bottom' : 'top'
+      if (side === 'top') newSide = 'top'
       if (side === 'bottom') newSide = 'bottom'
+      if (side.startsWith('auto')) {
+        // If preferred side has no space, flip
+        const vh = window.innerHeight
+        const spaceBelow = vh - rect.bottom
+        const spaceAbove = rect.top
+        if (preferBottom && spaceBelow < 96) newSide = 'top'
+        if (!preferBottom && spaceAbove < 72 + margin) newSide = 'bottom'
+      }
       setPlacement(newSide)
 
       // Horizontal: try to keep inside viewport
@@ -83,7 +92,7 @@ export default function InfoTip({ text, side = 'auto', align = 'center' }) {
         <div
           id={tipId}
           role="tooltip"
-          className={`animate-fade pointer-events-auto absolute z-50 w-[min(92vw,28rem)] max-w-none rounded-md border border-white/10 bg-slate-900/95 p-3 text-xs text-slate-200 shadow-lg backdrop-blur-md ${positionClasses}`}
+          className={`animate-fade pointer-events-auto absolute z-50 inline-block max-w-[min(92vw,26rem)] rounded-md border border-white/10 bg-slate-900/95 p-3 text-xs text-slate-200 shadow-lg backdrop-blur-md ${positionClasses}`}
         >
           {text}
           <span className={`absolute left-1/2 -ml-1 h-2 w-2 rotate-45 border border-white/10 bg-slate-900/95 ${arrowSide}`}></span>
