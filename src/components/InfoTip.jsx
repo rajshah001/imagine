@@ -2,7 +2,7 @@ import * as Tooltip from '@radix-ui/react-tooltip'
 
 export default function InfoTip({ text, side = 'bottom', align = 'center' }) {
   return (
-    <Tooltip.Provider delayDuration={120} disableHoverableContent={false}>
+    <Tooltip.Provider delayDuration={120}>
       <Tooltip.Root>
         <Tooltip.Trigger asChild>
           <button

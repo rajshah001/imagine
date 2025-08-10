@@ -657,10 +657,11 @@ function App() {
               <div className={classNames('gen-grid grid gap-2 p-2', (()=>{ const c = generated.length; return c===2 ? 'sm:grid-cols-2' : c===4 ? 'sm:grid-cols-2 md:grid-cols-2' : c>=3 ? 'sm:grid-cols-2 lg:grid-cols-3' : '' })())}>
                 {[{url:imageUrl,label:generated[0]?.label, seed: generated[0]?.seed, model: generated[0]?.model}, ...generated.slice(1)].map((g, idx) => {
                   const tileId = (g.label || `v${idx+1}`) + '-' + idx
-                  const showBar = isTouch || activeTile === tileId
+                  const showBar = activeTile === tileId
                   return (
                     <div key={(g.url||'base')+idx} className="group relative overflow-hidden rounded-lg border border-white/10 bg-slate-900"
-                         onTouchStart={() => setActiveTile(tileId)}>
+                         onTouchStart={() => setActiveTile(tileId)}
+                         onClick={() => setActiveTile(activeTile === tileId ? null : tileId)}>
                       <div className="absolute left-2 top-2 z-10 rounded bg-slate-950/60 px-2 py-0.5 text-xs">{g.label || `v${idx+1}`}</div>
                       <img src={g.url || imageUrl} alt="Generated" className="w-full object-contain" />
                       <div className={classNames('pointer-events-auto absolute inset-x-0 bottom-0 z-10 hidden items-center justify-center gap-3 p-3 backdrop-blur-sm text-[13px] md:text-sm group-hover:flex', showBar ? 'flex bg-slate-950/50' : '') }>
