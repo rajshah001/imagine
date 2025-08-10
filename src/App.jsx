@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import './App.css'
 import { Download, Github, Linkedin, Loader2, Share2, Twitter, Wand2 } from 'lucide-react'
 import Feed from './components/Feed.jsx'
+import History, { appendHistory } from './components/History.jsx'
 import InfoTip from './components/InfoTip.jsx'
 import toast, { Toaster } from 'react-hot-toast'
 
@@ -401,7 +402,18 @@ function App() {
 
             {imageUrl ? (
               <img src={imageUrl} alt="Generated"
-                   className={classNames('w-full object-contain transition-opacity', isLoading ? 'opacity-70' : 'opacity-100')} />
+                   className={classNames('w-full object-contain transition-opacity', isLoading ? 'opacity-70' : 'opacity-100')}
+                   onLoad={() => {
+                     appendHistory({
+                       url: imageUrl,
+                       prompt: appliedPrompt,
+                       model: appliedModel,
+                       seed: appliedSeed,
+                       width: appliedWidth,
+                       height: appliedHeight,
+                     })
+                   }}
+              />
             ) : (
               <div className="grid h-[60vh] place-items-center text-slate-400">
                 <p>Enter a prompt and click Generate to see results</p>
@@ -431,6 +443,13 @@ function App() {
         </section>
 
         <Feed onUsePrompt={(p) => setPrompt(p)} />
+        <History onLoad={(it) => {
+          setPrompt(it.prompt || '')
+          setModel(it.model || model)
+          setSeed(it.seed || seed)
+          setWidth(it.width || width)
+          setHeight(it.height || height)
+        }} />
       </main>
       <footer className="border-t border-white/10 bg-slate-950/70">
         <div className="mx-auto flex max-w-6xl flex-col items-center gap-2 px-4 py-6 text-center text-sm text-slate-400 md:flex-row md:justify-between md:text-left">
