@@ -581,10 +581,10 @@ function App() {
                 <span>Seed: <span className="text-slate-200">{seed}</span></span>
                 <span>Size: <span className="text-slate-200">{width}×{height}</span></span>
               </div>
-              <div className="hidden gap-2 sm:flex">
+              <div className="flex gap-2">
                 <button className="btn" onClick={onGenerate}>
                   <Wand2 className="size-4" />
-                  Apply Changes
+                  Generate
                 </button>
               </div>
             </div>
