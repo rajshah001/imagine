@@ -57,8 +57,9 @@ function buildPollinationsUrl(prompt, opts) {
   if (opts.safe !== undefined) params.set('safe', String(opts.safe))
   if (opts.steps) params.set('steps', String(opts.steps))
   if (opts.strength) params.set('strength', String(opts.strength))
-  // Cache bust using a small nonce when prompt or seed changes
-  params.set('bust', String(Date.now()))
+  // Cache bust per generation; allow caller to provide a stable token
+  if (opts.bust !== undefined) params.set('bust', String(opts.bust))
+  else params.set('bust', String(Date.now()))
   const encodedPrompt = encodeURIComponent(prompt.trim())
   return `https://image.pollinations.ai/prompt/${encodedPrompt}?${params.toString()}`
 }
@@ -131,6 +132,7 @@ function App() {
   const [appliedSafe, setAppliedSafe] = useState(true)
 
   const [requestedAt, setRequestedAt] = useState(0)
+  const [bust, setBust] = useState(0)
 
   const imageUrl = useMemo(() => {
     if (!appliedPrompt) return ''
@@ -143,8 +145,9 @@ function App() {
       nologo: appliedNologo,
       enhance: appliedEnhance,
       safe: appliedSafe,
+      bust,
     })
-  }, [appliedPrompt, appliedModel, appliedSeed, appliedWidth, appliedHeight, appliedNologo, appliedEnhance, appliedSafe, appliedStylePreset, requestedAt])
+  }, [appliedPrompt, appliedModel, appliedSeed, appliedWidth, appliedHeight, appliedNologo, appliedEnhance, appliedSafe, appliedStylePreset, bust])
 
   const { progress, isLoading } = useProgressiveLoader(imageUrl)
 
@@ -159,6 +162,34 @@ function App() {
       nextSeed = Math.floor(Math.random() * 10_000)
       setSeed(nextSeed)
     }
+    // Compute full prompt and URL for history
+    const newBust = Date.now()
+    const fullForHistory = stylePreset ? `${prompt}, ${STYLE_PRESETS.find(p => p.id === stylePreset)?.text ?? ''}` : prompt
+    const urlForHistory = buildPollinationsUrl(fullForHistory, {
+      model,
+      seed: nextSeed,
+      width,
+      height,
+      nologo,
+      enhance,
+      safe,
+      bust: newBust,
+    })
+    addItem({
+      url: urlForHistory,
+      prompt,
+      model,
+      seed: nextSeed,
+      width,
+      height,
+      nologo,
+      enhance,
+      safe,
+      stylePreset: stylePreset ?? null,
+      ratio: selectedRatio,
+      timestamp: new Date().toISOString(),
+    })
+    toast('Saved to history and generating...', { icon: '✨' })
     // Apply current draft controls and trigger a new generation
     setAppliedPrompt(prompt)
     setAppliedModel(model)
@@ -169,7 +200,7 @@ function App() {
     setAppliedEnhance(enhance)
     setAppliedSafe(safe)
     setAppliedStylePreset(stylePreset)
-    setRequestedAt(Date.now())
+    setBust(newBust)
   }
 
   const onRandomizeSeed = () => {
@@ -243,7 +274,7 @@ function App() {
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3">
           <div className="flex items-center gap-3">
             <img src={`${import.meta.env.BASE_URL}logo.svg`} alt="Imagine" className="h-9 w-9" />
-            <div>
+      <div>
               <h1 className="text-lg font-semibold">Imagine</h1>
               <p className="text-xs text-slate-400">Generate images via Pollinations</p>
             </div>
@@ -449,24 +480,14 @@ function App() {
             {imageUrl ? (
               <img src={imageUrl} alt="Generated"
                    className={classNames('w-full object-contain transition-opacity', isLoading ? 'opacity-70' : 'opacity-100')}
-                   onLoad={() => {
-                     addItem({
-                       url: imageUrl,
-                       prompt: appliedPrompt,
-                       model: appliedModel,
-                       seed: appliedSeed,
-                       width: appliedWidth,
-                       height: appliedHeight,
-                       stylePreset: appliedStylePreset,
-                     })
-                   }}
+                   onLoad={() => { toast.success('Generation complete') }}
               />
             ) : (
               <div className="grid h-[60vh] place-items-center text-slate-400">
                 <p>Enter a prompt and click Generate to see results</p>
               </div>
             )}
-          </div>
+      </div>
 
           <div className="mt-4 flex flex-wrap items-center gap-2">
             <button className="btn" onClick={onDownload} disabled={!imageUrl}>
@@ -485,12 +506,14 @@ function App() {
               toast('Markdown copied', { icon: '📝' })
             }} disabled={!imageUrl}>
               Copy Markdown
-            </button>
+        </button>
           </div>
         </section>
         )}
 
-        {view === 'create' && <Feed onUsePrompt={(p) => setPrompt(p)} />}
+        <div className={view === 'create' ? '' : 'hidden'}>
+          <Feed onUsePrompt={(p) => setPrompt(p)} />
+        </div>
         {view === 'history' && (
           <History onLoad={(it) => {
             setPrompt(it.prompt || '')
@@ -510,8 +533,8 @@ function App() {
           </p>
           <p>
             Powered by <a className="text-slate-200 hover:underline" target="_blank" rel="noreferrer" href="https://github.com/pollinations/pollinations/blob/master/APIDOCS.md">Pollinations AI</a>
-          </p>
-        </div>
+        </p>
+      </div>
       </footer>
     </div>
   )
