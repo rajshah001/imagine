@@ -662,12 +662,15 @@ function App() {
                     <div key={(g.url||'base')+idx} className="group relative overflow-hidden rounded-lg border border-white/10 bg-slate-900"
                          onTouchStart={() => setActiveTile(tileId)}>
                       <div className="absolute left-2 top-2 z-10 rounded bg-slate-950/60 px-2 py-0.5 text-xs">{g.label || `v${idx+1}`}</div>
-                      <div className="relative">
+                      <div
+                        className="relative w-full overflow-hidden"
+                        style={{ aspectRatio: `${appliedWidth}/${appliedHeight}` }}
+                      >
                         <img
                           src={g.url || imageUrl}
                           alt="Generated"
                           onLoad={() => setLoadedTileUrls((prev) => { const s = new Set(prev); s.add(g.url || imageUrl); return s })}
-                          className={classNames('w-full object-contain transition-opacity', loadedTileUrls.has(g.url || imageUrl) ? 'opacity-100' : 'opacity-0')}
+                          className={classNames('absolute inset-0 h-full w-full object-cover transition-opacity', loadedTileUrls.has(g.url || imageUrl) ? 'opacity-100' : 'opacity-0')}
                         />
                         {!loadedTileUrls.has(g.url || imageUrl) && (
                           <div className="absolute inset-0 grid place-items-center bg-slate-900/30">
