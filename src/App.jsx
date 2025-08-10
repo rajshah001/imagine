@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import './App.css'
 import { Download, Image as ImageIcon, Loader2, Share2, Wand2 } from 'lucide-react'
 import toast, { Toaster } from 'react-hot-toast'
@@ -70,31 +70,60 @@ function useProgressiveLoader(imageUrl) {
 }
 
 function App() {
+  // Draft (editable) parameters
   const [prompt, setPrompt] = useState(DEFAULT_PROMPT)
   const [model, setModel] = useState(MODELS[0].value)
-  const [seed, setSeed] = useState(42)
+  const [seed, setSeed] = useState(() => {
+    // Randomize on initial load/refresh only
+    return Math.floor(Math.random() * 10_000)
+  })
   const [width, setWidth] = useState(1024)
   const [height, setHeight] = useState(1024)
   const [nologo, setNologo] = useState(true)
   const [enhance, setEnhance] = useState(false)
   const [safe, setSafe] = useState(true)
 
+  // Applied parameters (used to actually fetch an image)
+  const [appliedPrompt, setAppliedPrompt] = useState(DEFAULT_PROMPT)
+  const [appliedModel, setAppliedModel] = useState(MODELS[0].value)
+  const [appliedSeed, setAppliedSeed] = useState(() => Math.floor(Math.random() * 10_000))
+  const [appliedWidth, setAppliedWidth] = useState(1024)
+  const [appliedHeight, setAppliedHeight] = useState(1024)
+  const [appliedNologo, setAppliedNologo] = useState(true)
+  const [appliedEnhance, setAppliedEnhance] = useState(false)
+  const [appliedSafe, setAppliedSafe] = useState(true)
+
   const [requestedAt, setRequestedAt] = useState(0)
 
   const imageUrl = useMemo(() => {
-    if (!prompt) return ''
-    return buildPollinationsUrl(prompt, { model, seed, width, height, nologo, enhance, safe })
-  }, [prompt, model, seed, width, height, nologo, enhance, safe, requestedAt])
+    if (!appliedPrompt) return ''
+    return buildPollinationsUrl(appliedPrompt, {
+      model: appliedModel,
+      seed: appliedSeed,
+      width: appliedWidth,
+      height: appliedHeight,
+      nologo: appliedNologo,
+      enhance: appliedEnhance,
+      safe: appliedSafe,
+    })
+  }, [appliedPrompt, appliedModel, appliedSeed, appliedWidth, appliedHeight, appliedNologo, appliedEnhance, appliedSafe, requestedAt])
 
   const { progress, isLoading } = useProgressiveLoader(imageUrl)
-  const [isShareOpen, setIsShareOpen] = useState(false)
-  const shareRef = useRef(null)
 
   const onGenerate = () => {
     if (!prompt.trim()) {
       toast.error('Enter a prompt to generate')
       return
     }
+    // Apply current draft controls and trigger a new generation
+    setAppliedPrompt(prompt)
+    setAppliedModel(model)
+    setAppliedSeed(seed)
+    setAppliedWidth(width)
+    setAppliedHeight(height)
+    setAppliedNologo(nologo)
+    setAppliedEnhance(enhance)
+    setAppliedSafe(safe)
     setRequestedAt(Date.now())
   }
 
@@ -127,38 +156,24 @@ function App() {
     try {
       // Try Web Share API first
       if (navigator.share) {
-        await navigator.share({ title: 'Generated with Pollinations', text: prompt, url: imageUrl })
+        await navigator.share({ title: 'Generated with Pollinations', text: appliedPrompt, url: imageUrl })
         toast.success('Shared via OS share sheet')
-        setIsShareOpen(false)
         return
       }
 
       // Fallback: copy Pollinations image URL to clipboard
       await navigator.clipboard.writeText(imageUrl)
       toast('Share link copied to clipboard', { icon: '🔗' })
-      setIsShareOpen(false)
     } catch (err) {
       toast.error('Unable to share right now')
     }
   }
 
-  // Close share popover on outside click / ESC
-  useEffect(() => {
-    if (!isShareOpen) return
-    const onDocClick = (e) => {
-      if (!shareRef.current) return
-      if (!shareRef.current.contains(e.target)) setIsShareOpen(false)
-    }
-    const onKey = (e) => {
-      if (e.key === 'Escape') setIsShareOpen(false)
-    }
-    document.addEventListener('pointerdown', onDocClick)
-    window.addEventListener('keydown', onKey)
-    return () => {
-      document.removeEventListener('pointerdown', onDocClick)
-      window.removeEventListener('keydown', onKey)
-    }
-  }, [isShareOpen])
+  const onCopyLink = async () => {
+    if (!imageUrl) return
+    await navigator.clipboard.writeText(imageUrl)
+    toast('Copied image URL', { icon: '🔗' })
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950">
@@ -285,44 +300,12 @@ function App() {
             <button className="btn" onClick={onDownload} disabled={!imageUrl}>
               <Download className="size-4" /> Download
             </button>
-
-            <div className="relative" ref={shareRef}>
-              <button
-                className="btn btn-secondary"
-                onClick={() => setIsShareOpen((v) => !v)}
-                disabled={!imageUrl}
-                aria-expanded={isShareOpen}
-                aria-haspopup="dialog"
-              >
-                <Share2 className="size-4" /> Share
-              </button>
-
-              {isShareOpen && (
-                <div
-                  role="dialog"
-                  aria-label="Share options"
-                  className="absolute left-0 top-full z-20 mt-2 w-80 rounded-2xl border border-white/10 bg-slate-900/90 p-4 shadow-lg backdrop-blur-md"
-                >
-                  <p className="mb-3 text-sm text-slate-300">Share this image:</p>
-                  <div className="flex flex-col gap-2">
-                    <button className="btn" onClick={onShare}>
-                      Share via OS / Copy link
-                    </button>
-                    <button
-                      className="btn btn-secondary"
-                      onClick={async () => {
-                        await navigator.clipboard.writeText(imageUrl)
-                        toast('Copied image URL', { icon: '🔗' })
-                        setIsShareOpen(false)
-                      }}
-                    >
-                      Copy image URL
-                    </button>
-                    <button className="btn btn-secondary" onClick={() => setIsShareOpen(false)}>Close</button>
-                  </div>
-                </div>
-              )}
-            </div>
+            <button className="btn btn-secondary" onClick={onShare} disabled={!imageUrl}>
+              <Share2 className="size-4" /> Share
+            </button>
+            <button className="btn btn-secondary" onClick={onCopyLink} disabled={!imageUrl}>
+              Copy link
+            </button>
           </div>
         </section>
       </main>
