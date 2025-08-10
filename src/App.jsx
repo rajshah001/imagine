@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import './App.css'
-import { Download, Github, Linkedin, Loader2, Share2, Twitter, Wand2 } from 'lucide-react'
+import { Download, Github, Linkedin, Loader2, Share2, Twitter, Wand2, Shuffle } from 'lucide-react'
 import Feed from './components/Feed.jsx'
 import History from './components/History.jsx'
 import { useHistoryStore } from './state/history.jsx'
@@ -9,7 +9,7 @@ import TemplateBuilder from './components/TemplateBuilder.jsx'
 import InfoTip from './components/InfoTip.jsx'
 import toast, { Toaster } from 'react-hot-toast'
 
-const DEFAULT_PROMPT = 'A futuristic city with flying cars and neon lights, ultra-detailed, cinematic lighting, wide angle';
+const DEFAULT_PROMPT = ''
 
 const MODELS = [
   { value: 'flux', label: 'Flux' },
@@ -125,7 +125,7 @@ function App() {
   const [activeTemplate, setActiveTemplate] = useState(null)
 
   // Applied parameters (used to actually fetch an image)
-  const [appliedPrompt, setAppliedPrompt] = useState(DEFAULT_PROMPT)
+  const [appliedPrompt, setAppliedPrompt] = useState('')
   const [appliedModel, setAppliedModel] = useState(MODELS[0].value)
   const [appliedSeed, setAppliedSeed] = useState(() => Math.floor(Math.random() * 10_000))
   const [appliedWidth, setAppliedWidth] = useState(1024)
@@ -137,6 +137,11 @@ function App() {
   const [requestedAt, setRequestedAt] = useState(0)
   const [bust, setBust] = useState(0)
   const [lastShownBust, setLastShownBust] = useState(null)
+  const [numVariations, setNumVariations] = useState(1)
+  const [abCompare, setAbCompare] = useState(false)
+  const [modelB, setModelB] = useState(MODELS[1]?.value || MODELS[0].value)
+  const [generated, setGenerated] = useState([]) // {url,label}
+  const [isSurprising, setIsSurprising] = useState(false)
 
   const imageUrl = useMemo(() => {
     if (!appliedPrompt) return ''
@@ -169,20 +174,32 @@ function App() {
     // Compute full prompt and URL for history
     const newBust = Date.now()
     const fullForHistory = stylePreset ? `${prompt}, ${STYLE_PRESETS.find(p => p.id === stylePreset)?.text ?? ''}` : prompt
-    const urlForHistory = buildPollinationsUrl(fullForHistory, {
-      model,
-      seed: nextSeed,
-      width,
-      height,
-      nologo,
-      enhance,
-      safe,
-      bust: newBust,
-    })
+    const seeds = Array.from({ length: numVariations }, (_, i) => (i === 0 ? nextSeed : nextSeed + i))
+    const modelsForRun = abCompare ? [model, modelB] : [model]
+    const urlsForHistory = []
+    let order = 0
+    for (const m of modelsForRun) {
+      for (const s of seeds) {
+        const url = buildPollinationsUrl(fullForHistory, {
+          model: m,
+          seed: s,
+          width,
+          height,
+          nologo,
+          enhance,
+          safe,
+          bust: newBust + order,
+        })
+        urlsForHistory.push({ url, label: abCompare ? (m === model ? `A-${s}` : `B-${s}`) : `v${order + 1}` })
+        order += 1
+      }
+    }
     addItem({
-      url: urlForHistory,
+      url: urlsForHistory[0]?.url,
+      urls: urlsForHistory,
       prompt,
       model,
+      modelB: abCompare ? modelB : null,
       seed: nextSeed,
       width,
       height,
@@ -191,8 +208,11 @@ function App() {
       safe,
       stylePreset: stylePreset ?? null,
       ratio: selectedRatio,
+      variations: numVariations,
+      abCompare,
       timestamp: new Date().toISOString(),
     })
+    setGenerated(urlsForHistory)
     toast('Saved to history and generating...', { icon: '✨' })
     // Apply current draft controls and trigger a new generation
     setAppliedPrompt(prompt)
@@ -223,6 +243,39 @@ function App() {
   const buildTemplateText = (pattern, value) => {
     if (!value) return ''
     return pattern.replace(/\{[^}]+\}/g, value)
+  }
+
+  const surpriseMe = () => {
+    try {
+      setIsSurprising(true)
+      const es = new EventSource('https://image.pollinations.ai/feed')
+      const timer = setTimeout(() => {
+        try { es.close() } catch {}
+        setIsSurprising(false)
+        toast('Could not load feed right now', { icon: '⚠️' })
+      }, 5000)
+      es.onmessage = (e) => {
+        clearTimeout(timer)
+        try {
+          const data = JSON.parse(e.data)
+          if (data?.prompt) setPrompt(data.prompt)
+          if (data?.model) setModel(data.model)
+          if (typeof data?.seed === 'number') setSeed(data.seed)
+          if (data?.width) setWidth(Number(data.width))
+          if (data?.height) setHeight(Number(data.height))
+          toast.success('Loaded a community prompt')
+        } catch {}
+        try { es.close() } catch {}
+        setIsSurprising(false)
+      }
+      es.onerror = () => {
+        try { es.close() } catch {}
+        setIsSurprising(false)
+        toast('Feed unavailable right now', { icon: '⚠️' })
+      }
+    } catch {
+      setIsSurprising(false)
+    }
   }
 
   const onDownload = async () => {
@@ -334,6 +387,9 @@ function App() {
                     title={`Use ${t.label} template`}
                   >{t.label}</button>
                 ))}
+                <button className="btn btn-secondary h-8 gap-1 px-3" onClick={surpriseMe} title="Load a random community prompt">
+                  <Shuffle className="size-3.5" /> Surprise me
+                </button>
               </div>
               {activeTemplate && (
                 <TemplateBuilder
@@ -425,6 +481,28 @@ function App() {
                        onChange={(e) => setEnhance(e.target.checked)} />
                 <label htmlFor="enhance" className="label flex items-center gap-1">Enhance <InfoTip align="start" text="Extra post-processing for sharpness and detail." /></label>
               </div>
+              <div>
+                <label className="label flex items-center gap-1">Variations <InfoTip align="start" text="Number of different outputs to render in one click (different seeds)." /></label>
+                <select className="input" value={numVariations} onChange={(e) => setNumVariations(Number(e.target.value))}>
+                  <option value={1}>1</option>
+                  <option value={2}>2</option>
+                  <option value={4}>4</option>
+                </select>
+              </div>
+              <div className="md:col-span-2 flex items-center gap-3 pt-6">
+                <input id="ab" type="checkbox" className="size-4" checked={abCompare} onChange={(e)=>setAbCompare(e.target.checked)} />
+                <label htmlFor="ab" className="label flex items-center gap-1">A/B Compare <InfoTip text="Render the same prompt with two models side-by-side." /></label>
+                {abCompare && (
+                  <>
+                    <span className="text-xs text-slate-400">Model B</span>
+                    <select className="input" value={modelB} onChange={(e)=>setModelB(e.target.value)}>
+                      {MODELS.map((m) => (
+                        <option key={m.value} value={m.value}>{m.label}</option>
+                      ))}
+                    </select>
+                  </>
+                )}
+              </div>
             </div>
 
             <div className="flex flex-wrap items-center justify-between gap-2 pt-2">
@@ -464,16 +542,23 @@ function App() {
             )}
 
             {imageUrl ? (
-              <img src={imageUrl} alt="Generated"
-                   className={classNames('w-full object-contain transition-opacity', isLoading ? 'opacity-70' : 'opacity-100')}
-                   onLoad={() => {
-                     // Only toast for the most recent generation, not on tab toggles
-                     if (lastShownBust !== bust) {
-                       setLastShownBust(bust)
-                       toast.success('Generation complete')
-                     }
-                   }}
-              />
+              <div className={classNames('grid gap-2 p-2', (abCompare || numVariations>1) ? 'sm:grid-cols-2 lg:grid-cols-3' : '')}>
+                <div className="relative">
+                  <img src={imageUrl} alt="Generated"
+                       className={classNames('w-full object-contain transition-opacity', isLoading ? 'opacity-70' : 'opacity-100')}
+                       onLoad={() => {
+                         if (lastShownBust !== bust) { setLastShownBust(bust); toast.success('Generation complete') }
+                       }}
+                  />
+                  {generated.length>0 && <div className="absolute left-2 top-2 rounded bg-slate-950/60 px-2 py-0.5 text-xs">{generated[0]?.label || 'v1'}</div>}
+                </div>
+                {generated.slice(1).map((g)=> (
+                  <div key={g.url} className="relative">
+                    <img src={g.url} alt="Generated variation" className="w-full object-contain" />
+                    <div className="absolute left-2 top-2 rounded bg-slate-950/60 px-2 py-0.5 text-xs">{g.label}</div>
+                  </div>
+                ))}
+              </div>
             ) : (
               <div className="grid h-[60vh] place-items-center text-slate-400">
                 <p>Enter a prompt and click Generate to see results</p>
@@ -490,6 +575,21 @@ function App() {
             </button>
             <button className="btn btn-secondary" onClick={onCopyLink} disabled={!imageUrl}>
               Copy link
+            </button>
+            <button className="btn btn-secondary" onClick={async () => {
+              const url = new URL(window.location.href)
+              url.searchParams.set('prompt', prompt)
+              url.searchParams.set('model', model)
+              url.searchParams.set('seed', String(seed))
+              url.searchParams.set('width', String(width))
+              url.searchParams.set('height', String(height))
+              url.searchParams.set('nologo', String(nologo))
+              url.searchParams.set('enhance', String(enhance))
+              if (stylePreset) url.searchParams.set('preset', stylePreset); else url.searchParams.delete('preset')
+              await navigator.clipboard.writeText(url.toString())
+              toast('Settings link copied', { icon: '🔗' })
+            }} disabled={!prompt}>
+              Copy settings link
             </button>
             <button className="btn btn-secondary" onClick={async () => {
               if (!imageUrl) return
