@@ -23,8 +23,9 @@ export default function Feed({ onUsePrompt }) {
   const [items, setItems] = useState([]) // newest first
   const [enabled, setEnabled] = useState(true)
   const [error, setError] = useState('')
-  const [speed, setSpeed] = useState('slow') // 'slow' | 'normal'
+  const [speed, setSpeed] = useState('normal') // 'slow' | 'normal'
   const [pageStart, setPageStart] = useState(0)
+  const [autoPaused, setAutoPaused] = useState(false)
   const urls = useRef(new Set())
   const queueRef = useRef([])
 
@@ -62,7 +63,8 @@ export default function Feed({ onUsePrompt }) {
 
   // Gradually move items from queue into the list to avoid overwhelming UI
   useEffect(() => {
-    const intervalMs = speed === 'slow' ? 1500 : 700
+    // Much slower ingestion to avoid overwhelming UI/network
+    const intervalMs = speed === 'slow' ? 30000 : 15000
     const id = setInterval(() => {
       if (!enabled) return
       const next = queueRef.current.shift()
@@ -122,17 +124,41 @@ export default function Feed({ onUsePrompt }) {
     )
   }, [visible, items, error, onUsePrompt])
 
+  const handleOlder = () => {
+    setPageStart((s) => {
+      const next = Math.min(s + PAGE_SIZE, Math.max(0, items.length - PAGE_SIZE))
+      return next
+    })
+    // Auto-pause when browsing older items
+    if (enabled) {
+      setEnabled(false)
+      setAutoPaused(true)
+    }
+  }
+
+  const handleNewer = () => {
+    setPageStart((s) => {
+      const next = Math.max(0, s - PAGE_SIZE)
+      // If we return to the latest page, auto-resume if we auto-paused earlier
+      if (next === 0 && autoPaused) {
+        setEnabled(true)
+        setAutoPaused(false)
+      }
+      return next
+    })
+  }
+
   return (
     <section className="mt-12">
       <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
         <h2 className="text-lg font-medium">Community Feed</h2>
         <div className="flex items-center gap-2">
-          <span className="text-xs text-slate-400">Speed</span>
-          <select className="input h-8 w-[110px] text-xs" value={speed} onChange={(e) => setSpeed(e.target.value)}>
-            <option value="slow">Slow</option>
-            <option value="normal">Normal</option>
+          <span className="text-xs text-slate-400" title="Controls how quickly new items appear in the feed.">Speed</span>
+          <select className="input h-8 w-[140px] text-xs" value={speed} onChange={(e) => setSpeed(e.target.value)} title="Slow = every ~30s, Normal = every ~15s">
+            <option value="normal">Normal (≈15s)</option>
+            <option value="slow">Slow (≈30s)</option>
           </select>
-          <button className="btn btn-secondary h-8 px-3 text-xs" onClick={() => setEnabled((v) => !v)}>
+          <button className="btn h-8 px-3 text-xs" onClick={() => setEnabled((v) => !v)} title={enabled ? 'Pause live updates' : 'Resume live updates'}>
             {enabled ? 'Pause' : 'Resume'}
           </button>
         </div>
@@ -141,16 +167,18 @@ export default function Feed({ onUsePrompt }) {
       <div className="mt-3 flex items-center justify-between">
         <button
           className="btn btn-secondary h-8 px-3 text-xs disabled:opacity-50"
-          onClick={() => setPageStart((s) => Math.min(s + PAGE_SIZE, Math.max(0, items.length - PAGE_SIZE)))}
+          onClick={handleOlder}
           disabled={pageStart + PAGE_SIZE >= items.length}
+          title="Show older items and pause the live feed"
         >
           Older
         </button>
         <div className="text-xs text-slate-400">Showing {pageStart + 1}–{Math.min(pageStart + PAGE_SIZE, items.length)} of {items.length}</div>
         <button
           className="btn btn-secondary h-8 px-3 text-xs disabled:opacity-50"
-          onClick={() => setPageStart((s) => Math.max(0, s - PAGE_SIZE))}
+          onClick={handleNewer}
           disabled={pageStart === 0}
+          title="Go back towards the latest items. When you reach page 1, live feed will resume automatically."
         >
           Newer
         </button>
