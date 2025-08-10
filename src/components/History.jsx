@@ -19,6 +19,9 @@ export default function History({ onLoad }) {
               <button className="btn btn-secondary h-8 text-xs" onClick={() => onLoad?.(it)}>Remix</button>
               <button className="btn btn-secondary h-8 text-xs" onClick={async () => navigator.clipboard.writeText(it.url)}>Copy link</button>
             </div>
+            {it.stylePreset && (
+              <div className="px-2 pb-2 text-[10px] text-slate-400">Preset: {it.stylePreset}</div>
+            )}
           </figure>
         ))}
       </div>

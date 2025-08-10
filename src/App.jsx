@@ -335,6 +335,12 @@ function App() {
             />
 
             <div className="flex flex-wrap gap-2 pt-1">
+              <button
+                key="none"
+                className={classNames('rounded-full border px-3 py-1 text-xs', !stylePreset ? 'border-brand-500 bg-brand-600/20 text-white' : 'border-white/10 bg-slate-900 text-slate-300 hover:text-white')}
+                onClick={() => setStylePreset(null)}
+                title="No preset"
+              >None</button>
               {STYLE_PRESETS.map((p) => (
                 <button
                   key={p.id}
@@ -343,9 +349,6 @@ function App() {
                   title={p.text}
                 >{p.label}</button>
               ))}
-              {stylePreset && (
-                <button className="text-xs text-slate-400 underline" onClick={() => setStylePreset(null)}>Clear style</button>
-              )}
             </div>
 
             <div className="flex flex-wrap items-center gap-2 pt-1">
@@ -454,6 +457,7 @@ function App() {
                        seed: appliedSeed,
                        width: appliedWidth,
                        height: appliedHeight,
+                       stylePreset: appliedStylePreset,
                      })
                    }}
               />
@@ -491,9 +495,10 @@ function App() {
           <History onLoad={(it) => {
             setPrompt(it.prompt || '')
             setModel(it.model || model)
-            setSeed(it.seed || seed)
-            setWidth(it.width || width)
-            setHeight(it.height || height)
+            setSeed(it.seed ?? seed)
+            setWidth(it.width ?? width)
+            setHeight(it.height ?? height)
+            setStylePreset(it.stylePreset ?? null)
             setView('create')
           }} />
         )}
