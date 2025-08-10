@@ -46,10 +46,13 @@ export default function Feed({ onUsePrompt }) {
         const seeds = data.items
           .filter((x) => x?.url)
           .slice(0, PAGE_SIZE)
-          .map((x) => ({ url: x.url, prompt: x.prompt || '' }))
+          .map((x) => {
+            const displayUrl = x.localSrc ? (base + x.localSrc) : x.url
+            return { url: displayUrl, prompt: x.prompt || '', fallbackUrl: x.url }
+          })
         if (!cancelled && seeds.length) {
           // pre-fill de-dup set
-          seeds.forEach((s) => urls.current.add(s.url))
+          data.items.slice(0, PAGE_SIZE).forEach((x) => urls.current.add(x.url))
           setItems((prev) => (prev.length ? prev : seeds))
           itemsLenRef.current = seeds.length
         }
