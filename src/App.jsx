@@ -5,6 +5,7 @@ import Feed from './components/Feed.jsx'
 import History from './components/History.jsx'
 import { useHistoryStore } from './state/history.jsx'
 import Nav from './components/Nav.jsx'
+import TemplateBuilder from './components/TemplateBuilder.jsx'
 import InfoTip from './components/InfoTip.jsx'
 import toast, { Toaster } from 'react-hot-toast'
 
@@ -119,7 +120,6 @@ function App() {
   const [appliedStylePreset, setAppliedStylePreset] = useState(null)
   const [selectedRatio, setSelectedRatio] = useState('1:1')
   const [activeTemplate, setActiveTemplate] = useState(null)
-  const [templateValue, setTemplateValue] = useState('')
 
   // Applied parameters (used to actually fetch an image)
   const [appliedPrompt, setAppliedPrompt] = useState(DEFAULT_PROMPT)
@@ -133,6 +133,7 @@ function App() {
 
   const [requestedAt, setRequestedAt] = useState(0)
   const [bust, setBust] = useState(0)
+  const [lastShownBust, setLastShownBust] = useState(null)
 
   const imageUrl = useMemo(() => {
     if (!appliedPrompt) return ''
@@ -326,37 +327,19 @@ function App() {
                   <button
                     key={t.id}
                     className={classNames('btn btn-secondary h-8 px-3', activeTemplate === t.id && 'ring-1 ring-brand-500')}
-                    onClick={() => {
-                      if (activeTemplate === t.id) {
-                        setActiveTemplate(null); setTemplateValue(''); return
-                      }
-                      setActiveTemplate(t.id)
-                      setTemplateValue('')
-                    }}
+                    onClick={() => setActiveTemplate(activeTemplate === t.id ? null : t.id)}
                     title={`Use ${t.label} template`}
                   >{t.label}</button>
                 ))}
-                {activeTemplate && (
-                  <div className="flex items-center gap-2">
-                    <input
-                      className="input h-8 w-48"
-                      placeholder={activeTemplate === 'landscape' ? 'Place (e.g., Yosemite)' : 'Subject'}
-                      value={templateValue}
-                      onChange={(e) => setTemplateValue(e.target.value)}
-                    />
-                    <button
-                      className="btn btn-secondary h-8 px-3"
-                      onClick={() => {
-                        const patt = TEMPLATES.find(t => t.id === activeTemplate)?.pattern || ''
-                        const txt = buildTemplateText(patt, templateValue.trim())
-                        if (!txt) return
-                        setPrompt(txt)
-                      }}
-                    >Apply</button>
-                    <button className="btn btn-secondary h-8 px-3" onClick={() => { setActiveTemplate(null); setTemplateValue('') }}>Cancel</button>
-                  </div>
-                )}
               </div>
+              {activeTemplate && (
+                <TemplateBuilder
+                  template={TEMPLATES.find(t => t.id === activeTemplate)}
+                  currentPrompt={prompt}
+                  onApply={(txt) => { setPrompt(txt); setActiveTemplate(null); toast.success('Template applied') }}
+                  onCancel={() => setActiveTemplate(null)}
+                />
+              )}
             </div>
             <textarea
               className="input min-h-24 resize-y"
@@ -480,7 +463,13 @@ function App() {
             {imageUrl ? (
               <img src={imageUrl} alt="Generated"
                    className={classNames('w-full object-contain transition-opacity', isLoading ? 'opacity-70' : 'opacity-100')}
-                   onLoad={() => { toast.success('Generation complete') }}
+                   onLoad={() => {
+                     // Only toast for the most recent generation, not on tab toggles
+                     if (lastShownBust !== bust) {
+                       setLastShownBust(bust)
+                       toast.success('Generation complete')
+                     }
+                   }}
               />
             ) : (
               <div className="grid h-[60vh] place-items-center text-slate-400">
