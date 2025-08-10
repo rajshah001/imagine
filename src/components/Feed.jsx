@@ -33,6 +33,31 @@ export default function Feed({ onUsePrompt }) {
   const retryTimerRef = useRef(null)
   const [retryCount, setRetryCount] = useState(0)
 
+  // Seed initial items from a bundled JSON for instant first paint
+  useEffect(() => {
+    let cancelled = false
+    ;(async () => {
+      try {
+        const base = import.meta.env.BASE_URL || '/'
+        const res = await fetch(base + 'seed-feed.json')
+        if (!res.ok) return
+        const data = await res.json()
+        if (!Array.isArray(data?.items)) return
+        const seeds = data.items
+          .filter((x) => x?.url)
+          .slice(0, PAGE_SIZE)
+          .map((x) => ({ url: x.url, prompt: x.prompt || '' }))
+        if (!cancelled && seeds.length) {
+          // pre-fill de-dup set
+          seeds.forEach((s) => urls.current.add(s.url))
+          setItems((prev) => (prev.length ? prev : seeds))
+          itemsLenRef.current = seeds.length
+        }
+      } catch {/* ignore */}
+    })()
+    return () => { cancelled = true }
+  }, [])
+
   useEffect(() => {
     if (!enabled) return
     let cancelled = false
