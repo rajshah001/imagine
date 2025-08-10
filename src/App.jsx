@@ -398,50 +398,48 @@ function App() {
     <div className="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950">
       <Toaster position="top-right" />
       <header className="sticky top-0 z-20 border-b border-white/10 bg-slate-950/70 backdrop-blur-md">
-        <div className="mx-auto flex max-w-6xl flex-col items-start gap-2 px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
-          <div className="flex items-center gap-3">
-            <img src={`${import.meta.env.BASE_URL}logo.svg`} alt="Imagine" className="h-9 w-9" />
-      <div>
-              <h1 className="text-lg font-semibold">Imagine</h1>
-              <p className="hidden text-xs text-slate-400 sm:block">Generate images via Pollinations</p>
+        <div className="mx-auto max-w-6xl px-4 py-3">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <img src={`${import.meta.env.BASE_URL}logo.svg`} alt="Imagine" className="h-9 w-9" />
+              <div>
+                <h1 className="text-lg font-semibold">Imagine</h1>
+                <p className="hidden text-xs text-slate-400 sm:block">Generate images via Pollinations</p>
+              </div>
             </div>
+            <nav className="flex items-center gap-2">
+              <a
+                href="https://x.com/DaRajShah"
+                target="_blank"
+                rel="noreferrer"
+                aria-label="Raj Shah on X"
+                className="inline-flex items-center justify-center rounded-lg border border-white/10 bg-slate-900 px-2 py-2 text-slate-300 hover:text-white"
+              >
+                <Twitter className="size-4" />
+              </a>
+              <a
+                href="https://www.linkedin.com/in/rajshah001/"
+                target="_blank"
+                rel="noreferrer"
+                aria-label="Raj Shah on LinkedIn"
+                className="inline-flex items-center justify-center rounded-lg border border-white/10 bg-slate-900 px-2 py-2 text-slate-300 hover:text-white"
+              >
+                <Linkedin className="size-4" />
+              </a>
+              <a
+                href="https://github.com/rajshah001"
+                target="_blank"
+                rel="noreferrer"
+                aria-label="Raj Shah on GitHub"
+                className="inline-flex items-center justify-center rounded-lg border border-white/10 bg-slate-900 px-2 py-2 text-slate-300 hover:text-white"
+              >
+                <Github className="size-4" />
+              </a>
+            </nav>
           </div>
-
-          <div className="order-3 w-full justify-center sm:order-none sm:w-auto sm:justify-start">
-            <div className="flex items-center justify-center gap-3">
-              <Nav current={view} onChange={setView} />
-            </div>
+          <div className="mt-2 flex justify-center">
+            <Nav current={view} onChange={setView} />
           </div>
-
-          <nav className="hidden items-center gap-2 sm:flex">
-            <a
-              href="https://x.com/DaRajShah"
-              target="_blank"
-              rel="noreferrer"
-              aria-label="Raj Shah on X"
-              className="inline-flex items-center justify-center rounded-lg border border-white/10 bg-slate-900 px-2 py-2 text-slate-300 hover:text-white"
-            >
-              <Twitter className="size-4" />
-            </a>
-            <a
-              href="https://www.linkedin.com/in/rajshah001/"
-              target="_blank"
-              rel="noreferrer"
-              aria-label="Raj Shah on LinkedIn"
-              className="inline-flex items-center justify-center rounded-lg border border-white/10 bg-slate-900 px-2 py-2 text-slate-300 hover:text-white"
-            >
-              <Linkedin className="size-4" />
-            </a>
-            <a
-              href="https://github.com/rajshah001"
-              target="_blank"
-              rel="noreferrer"
-              aria-label="Raj Shah on GitHub"
-              className="inline-flex items-center justify-center rounded-lg border border-white/10 bg-slate-900 px-2 py-2 text-slate-300 hover:text-white"
-            >
-              <Github className="size-4" />
-            </a>
-          </nav>
         </div>
       </header>
 
