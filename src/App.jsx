@@ -33,6 +33,12 @@ const ASPECT_RATIOS = [
   { id: '9:16', label: '9:16', w: 768, h: 1365 },
 ]
 
+const TEMPLATES = [
+  { id: 'product', label: 'Product shot', pattern: '{subject} product photo, studio lighting, seamless background, high detail' },
+  { id: 'portrait', label: 'Portrait', pattern: 'Portrait of {subject}, shallow depth of field, soft light, 85mm lens' },
+  { id: 'landscape', label: 'Landscape', pattern: '{place} landscape, golden hour, dramatic sky, wide angle' },
+]
+
 function classNames(...values) {
   return values.filter(Boolean).join(' ')
 }
@@ -105,7 +111,10 @@ function App() {
   const [safe, setSafe] = useState(true)
   const [seedLocked, setSeedLocked] = useState(false)
   const [stylePreset, setStylePreset] = useState(null)
+  const [appliedStylePreset, setAppliedStylePreset] = useState(null)
   const [selectedRatio, setSelectedRatio] = useState('1:1')
+  const [activeTemplate, setActiveTemplate] = useState(null)
+  const [templateValue, setTemplateValue] = useState('')
 
   // Applied parameters (used to actually fetch an image)
   const [appliedPrompt, setAppliedPrompt] = useState(DEFAULT_PROMPT)
@@ -121,7 +130,7 @@ function App() {
 
   const imageUrl = useMemo(() => {
     if (!appliedPrompt) return ''
-    const fullPrompt = stylePreset ? `${appliedPrompt}, ${STYLE_PRESETS.find(p => p.id === stylePreset)?.text ?? ''}` : appliedPrompt
+    const fullPrompt = appliedStylePreset ? `${appliedPrompt}, ${STYLE_PRESETS.find(p => p.id === appliedStylePreset)?.text ?? ''}` : appliedPrompt
     return buildPollinationsUrl(fullPrompt, {
       model: appliedModel,
       seed: appliedSeed,
@@ -131,7 +140,7 @@ function App() {
       enhance: appliedEnhance,
       safe: appliedSafe,
     })
-  }, [appliedPrompt, appliedModel, appliedSeed, appliedWidth, appliedHeight, appliedNologo, appliedEnhance, appliedSafe, requestedAt])
+  }, [appliedPrompt, appliedModel, appliedSeed, appliedWidth, appliedHeight, appliedNologo, appliedEnhance, appliedSafe, appliedStylePreset, requestedAt])
 
   const { progress, isLoading } = useProgressiveLoader(imageUrl)
 
@@ -155,6 +164,7 @@ function App() {
     setAppliedNologo(nologo)
     setAppliedEnhance(enhance)
     setAppliedSafe(safe)
+    setAppliedStylePreset(stylePreset)
     setRequestedAt(Date.now())
   }
 
@@ -169,6 +179,11 @@ function App() {
     setSelectedRatio(ratioId)
     setWidth(r.w)
     setHeight(r.h)
+  }
+
+  const buildTemplateText = (pattern, value) => {
+    if (!value) return ''
+    return pattern.replace(/\{[^}]+\}/g, value)
   }
 
   const onDownload = async () => {
@@ -265,25 +280,43 @@ function App() {
       <main className="mx-auto max-w-6xl px-4 pb-20 pt-6">
         <section className="glass rounded-2xl p-4 md:p-6">
           <div className="flex flex-col gap-4">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
               <label className="label flex items-center gap-2">Prompt <InfoTip align="start" text="Describe exactly what you want in the image. Be specific about subject, style, lighting, composition." /></label>
-              <div className="flex items-center gap-2 text-xs">
-                <button
-                  className="btn btn-secondary h-8 px-3"
-                  onClick={() => {
-                    const subject = window.prompt('Template: Product shot — enter subject (e.g., smartwatch):')
-                    if (!subject) return
-                    setPrompt(`${subject} product photo, studio lighting, seamless background, high detail`)
-                  }}
-                >Template: Product</button>
-                <button
-                  className="btn btn-secondary h-8 px-3"
-                  onClick={() => {
-                    const subject = window.prompt('Template: Portrait — enter subject (e.g., woman in red dress):')
-                    if (!subject) return
-                    setPrompt(`${subject}, portrait photography, shallow depth of field, soft light`)
-                  }}
-                >Template: Portrait</button>
+              <div className="flex flex-wrap items-center gap-2 text-xs">
+                {TEMPLATES.map((t) => (
+                  <button
+                    key={t.id}
+                    className={classNames('btn btn-secondary h-8 px-3', activeTemplate === t.id && 'ring-1 ring-brand-500')}
+                    onClick={() => {
+                      if (activeTemplate === t.id) {
+                        setActiveTemplate(null); setTemplateValue(''); return
+                      }
+                      setActiveTemplate(t.id)
+                      setTemplateValue('')
+                    }}
+                    title={`Use ${t.label} template`}
+                  >{t.label}</button>
+                ))}
+                {activeTemplate && (
+                  <div className="flex items-center gap-2">
+                    <input
+                      className="input h-8 w-48"
+                      placeholder={activeTemplate === 'landscape' ? 'Place (e.g., Yosemite)' : 'Subject'}
+                      value={templateValue}
+                      onChange={(e) => setTemplateValue(e.target.value)}
+                    />
+                    <button
+                      className="btn btn-secondary h-8 px-3"
+                      onClick={() => {
+                        const patt = TEMPLATES.find(t => t.id === activeTemplate)?.pattern || ''
+                        const txt = buildTemplateText(patt, templateValue.trim())
+                        if (!txt) return
+                        setPrompt(txt)
+                      }}
+                    >Apply</button>
+                    <button className="btn btn-secondary h-8 px-3" onClick={() => { setActiveTemplate(null); setTemplateValue('') }}>Cancel</button>
+                  </div>
+                )}
               </div>
             </div>
             <textarea
