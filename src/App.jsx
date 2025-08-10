@@ -281,7 +281,23 @@ function App() {
   const onDownload = async () => {
     if (!imageUrl) return
     try {
-      const response = await fetch(imageUrl, { mode: 'cors' })
+      // Retry with backoff if network hiccups
+      const fetchWithRetry = async (url, attempts = 3) => {
+        let lastErr
+        for (let i = 0; i < attempts; i++) {
+          try {
+            const res = await fetch(url, { mode: 'cors' })
+            if (!res.ok) throw new Error(`HTTP ${res.status}`)
+            return res
+          } catch (e) {
+            lastErr = e
+            await new Promise(r => setTimeout(r, 400 * Math.pow(2, i)))
+          }
+        }
+        throw lastErr
+      }
+
+      const response = await fetchWithRetry(imageUrl)
       const blob = await response.blob()
       const objectUrl = URL.createObjectURL(blob)
       const link = document.createElement('a')
@@ -311,7 +327,14 @@ function App() {
       }
 
       // Fallback: copy Pollinations image URL to clipboard
-      await navigator.clipboard.writeText(imageUrl)
+      // Retry copy in case of permission delay
+      const tryCopy = async () => {
+        try { await navigator.clipboard.writeText(imageUrl); return true } catch { return false }
+      }
+      if (!(await tryCopy())) {
+        await new Promise(r => setTimeout(r, 300));
+        await tryCopy()
+      }
       toast('Share link copied to clipboard', { icon: '🔗' })
     } catch (err) {
       toast.error('Unable to share right now')
@@ -542,7 +565,7 @@ function App() {
             )}
 
             {imageUrl ? (
-              <div className={classNames('grid gap-2 p-2', (abCompare || numVariations>1) ? 'sm:grid-cols-2 lg:grid-cols-3' : '')}>
+              <div className={classNames('gen-grid grid gap-2 p-2', (()=>{ const c = generated.length; return c===2 ? 'grid-cols-2' : c>=3 ? 'sm:grid-cols-2 lg:grid-cols-3' : '' })())}>
                 <div className="relative">
                   <img src={imageUrl} alt="Generated"
                        className={classNames('w-full object-contain transition-opacity', isLoading ? 'opacity-70' : 'opacity-100')}

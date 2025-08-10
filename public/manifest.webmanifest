@@ -1,0 +1,15 @@
+{
+  "name": "Imagine — Pollinations Image Generator",
+  "short_name": "Imagine",
+  "start_url": "/imagine/",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#0f172a",
+  "description": "Generate AI images with Pollinations. Prompt, style presets, variations, A/B compare, history, shareable links.",
+  "icons": [
+    { "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml" },
+    { "src": "/logo.svg", "sizes": "128x128", "type": "image/svg+xml" }
+  ]
+}
+
+
