@@ -1,0 +1,51 @@
+@import 'tailwindcss';
+
+@theme {
+  --font-sans: Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI,
+    Roboto, Helvetica, Arial, Noto Sans, 'Apple Color Emoji', 'Segoe UI Emoji',
+    'Segoe UI Symbol', 'Noto Color Emoji';
+  /* Custom brand color scale for v4 */
+  --color-brand-50: #eef2ff;
+  --color-brand-100: #e0e7ff;
+  --color-brand-200: #c7d2fe;
+  --color-brand-300: #a5b4fc;
+  --color-brand-400: #818cf8;
+  --color-brand-500: #6366f1;
+  --color-brand-600: #4f46e5;
+  --color-brand-700: #4338ca;
+  --color-brand-800: #3730a3;
+  --color-brand-900: #312e81;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  @apply bg-slate-950 text-slate-100 antialiased;
+}
+
+.glass {
+  @apply bg-white/10 backdrop-blur-md border border-white/10 shadow-[0_10px_30px_rgba(2,6,23,0.45)];
+}
+
+.btn {
+  @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2
+  bg-brand-600 hover:bg-brand-500 active:bg-brand-700 text-white
+  transition-colors disabled:opacity-50 disabled:cursor-not-allowed;
+}
+
+.btn-secondary {
+  @apply bg-slate-800 hover:bg-slate-700 active:bg-slate-900;
+}
+
+.input {
+  @apply w-full rounded-lg bg-slate-900/70 border border-white/10 px-3 py-2
+  text-slate-100 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500;
+}
+
+.label {
+  @apply text-sm text-slate-300;
+}
