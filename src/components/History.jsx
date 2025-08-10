@@ -1,21 +1,7 @@
-import { useEffect, useState } from 'react'
-
-const STORAGE_KEY = 'imagine.history.v1'
+import { useHistoryStore } from '../state/history.js'
 
 export default function History({ onLoad }) {
-  const [items, setItems] = useState([])
-
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY)
-      if (raw) setItems(JSON.parse(raw))
-    } catch {}
-  }, [])
-
-  const clear = () => {
-    localStorage.removeItem(STORAGE_KEY)
-    setItems([])
-  }
+  const { items, clear } = useHistoryStore()
 
   if (!items.length) return null
 
@@ -39,15 +25,4 @@ export default function History({ onLoad }) {
     </section>
   )
 }
-
-export function appendHistory(entry) {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY)
-    const items = raw ? JSON.parse(raw) : []
-    items.unshift(entry)
-    if (items.length > 30) items.length = 30
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(items))
-  } catch {}
-}
-
 

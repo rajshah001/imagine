@@ -2,7 +2,9 @@ import { useEffect, useMemo, useState } from 'react'
 import './App.css'
 import { Download, Github, Linkedin, Loader2, Share2, Twitter, Wand2 } from 'lucide-react'
 import Feed from './components/Feed.jsx'
-import History, { appendHistory } from './components/History.jsx'
+import History from './components/History.jsx'
+import { useHistoryStore } from './state/history.js'
+import Nav from './components/Nav.jsx'
 import InfoTip from './components/InfoTip.jsx'
 import toast, { Toaster } from 'react-hot-toast'
 
@@ -97,6 +99,8 @@ function useProgressiveLoader(imageUrl) {
 }
 
 function App() {
+  const { addItem } = useHistoryStore()
+  const [view, setView] = useState('create')
   // Draft (editable) parameters
   const [prompt, setPrompt] = useState(DEFAULT_PROMPT)
   const [model, setModel] = useState(MODELS[0].value)
@@ -245,6 +249,9 @@ function App() {
             </div>
           </div>
 
+          <div className="flex items-center gap-4">
+            <Nav current={view} onChange={setView} />
+          </div>
           <nav className="flex items-center gap-2">
             <a
               href="https://x.com/DaRajShah"
@@ -278,6 +285,7 @@ function App() {
       </header>
 
       <main className="mx-auto max-w-6xl px-4 pb-20 pt-6">
+        {view === 'create' && (
         <section className="glass rounded-2xl p-4 md:p-6">
           <div className="flex flex-col gap-4">
             <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
@@ -414,7 +422,9 @@ function App() {
             </div>
           </div>
         </section>
+        )}
 
+        {view === 'create' && (
         <section className="mt-8">
           <h2 className="mb-3 text-lg font-medium">Generated Image</h2>
           <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-slate-900">
@@ -437,7 +447,7 @@ function App() {
               <img src={imageUrl} alt="Generated"
                    className={classNames('w-full object-contain transition-opacity', isLoading ? 'opacity-70' : 'opacity-100')}
                    onLoad={() => {
-                     appendHistory({
+                     addItem({
                        url: imageUrl,
                        prompt: appliedPrompt,
                        model: appliedModel,
@@ -474,15 +484,19 @@ function App() {
             </button>
           </div>
         </section>
+        )}
 
-        <Feed onUsePrompt={(p) => setPrompt(p)} />
-        <History onLoad={(it) => {
-          setPrompt(it.prompt || '')
-          setModel(it.model || model)
-          setSeed(it.seed || seed)
-          setWidth(it.width || width)
-          setHeight(it.height || height)
-        }} />
+        {view === 'create' && <Feed onUsePrompt={(p) => setPrompt(p)} />}
+        {view === 'history' && (
+          <History onLoad={(it) => {
+            setPrompt(it.prompt || '')
+            setModel(it.model || model)
+            setSeed(it.seed || seed)
+            setWidth(it.width || width)
+            setHeight(it.height || height)
+            setView('create')
+          }} />
+        )}
       </main>
       <footer className="border-t border-white/10 bg-slate-950/70">
         <div className="mx-auto flex max-w-6xl flex-col items-center gap-2 px-4 py-6 text-center text-sm text-slate-400 md:flex-row md:justify-between md:text-left">
