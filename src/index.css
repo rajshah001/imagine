@@ -50,6 +50,10 @@ body {
   @apply text-sm text-slate-300;
 }
 
+.template-chip {
+  @apply rounded-full border border-white/10 bg-slate-900 text-slate-300 hover:text-white px-3 py-1 text-xs;
+}
+
 @keyframes slideInUp {
   from {
     transform: translateY(12px);
