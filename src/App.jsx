@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import './App.css'
-import { Download, Image as ImageIcon, Loader2, Share2, Wand2 } from 'lucide-react'
+import { Download, Github, Linkedin, Loader2, Share2, Twitter, Wand2 } from 'lucide-react'
 import toast, { Toaster } from 'react-hot-toast'
 
 const DEFAULT_PROMPT = 'A futuristic city with flying cars and neon lights, ultra-detailed, cinematic lighting, wide angle';
@@ -181,19 +181,42 @@ function App() {
       <header className="sticky top-0 z-20 border-b border-white/10 bg-slate-950/70 backdrop-blur-md">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3">
           <div className="flex items-center gap-3">
-            <div className="size-9 rounded-lg bg-brand-600 grid place-items-center">
-              <ImageIcon className="size-5" />
-            </div>
+            <img src="/logo.svg" alt="Imagine" className="h-9 w-9" />
             <div>
               <h1 className="text-lg font-semibold">Imagine</h1>
               <p className="text-xs text-slate-400">Generate images via Pollinations</p>
             </div>
           </div>
-          <a
-            href="https://github.com/pollinations/pollinations/blob/master/APIDOCS.md"
-            className="hidden md:inline-flex text-xs text-slate-300 hover:text-white"
-            target="_blank" rel="noreferrer"
-          >API Docs</a>
+
+          <nav className="flex items-center gap-2">
+            <a
+              href="https://x.com/DaRajShah"
+              target="_blank"
+              rel="noreferrer"
+              aria-label="Raj Shah on X"
+              className="inline-flex items-center justify-center rounded-lg border border-white/10 bg-slate-900 px-2 py-2 text-slate-300 hover:text-white"
+            >
+              <Twitter className="size-4" />
+            </a>
+            <a
+              href="https://www.linkedin.com/in/rajshah001/"
+              target="_blank"
+              rel="noreferrer"
+              aria-label="Raj Shah on LinkedIn"
+              className="inline-flex items-center justify-center rounded-lg border border-white/10 bg-slate-900 px-2 py-2 text-slate-300 hover:text-white"
+            >
+              <Linkedin className="size-4" />
+            </a>
+            <a
+              href="https://github.com/rajshah001"
+              target="_blank"
+              rel="noreferrer"
+              aria-label="Raj Shah on GitHub"
+              className="inline-flex items-center justify-center rounded-lg border border-white/10 bg-slate-900 px-2 py-2 text-slate-300 hover:text-white"
+            >
+              <Github className="size-4" />
+            </a>
+          </nav>
         </div>
       </header>
 
@@ -309,6 +332,16 @@ function App() {
           </div>
         </section>
       </main>
+      <footer className="border-t border-white/10 bg-slate-950/70">
+        <div className="mx-auto flex max-w-6xl flex-col items-center gap-2 px-4 py-6 text-center text-sm text-slate-400 md:flex-row md:justify-between md:text-left">
+          <p>
+            Built by <a className="text-slate-200 hover:underline" href="https://github.com/rajshah001" target="_blank" rel="noreferrer">Raj Shah</a>
+          </p>
+          <p>
+            Powered by <a className="text-slate-200 hover:underline" target="_blank" rel="noreferrer" href="https://github.com/pollinations/pollinations/blob/master/APIDOCS.md">Pollinations AI</a>
+          </p>
+        </div>
+      </footer>
     </div>
   )
 }
