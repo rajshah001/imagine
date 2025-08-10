@@ -40,6 +40,9 @@ const TEMPLATES = [
   { id: 'product', label: 'Product shot', pattern: '{subject} product photo, studio lighting, seamless background, high detail' },
   { id: 'portrait', label: 'Portrait', pattern: 'Portrait of {subject}, shallow depth of field, soft light, 85mm lens' },
   { id: 'landscape', label: 'Landscape', pattern: '{place} landscape, golden hour, dramatic sky, wide angle' },
+  { id: 'interior', label: 'Interior design', pattern: '{room} interior, natural light, minimalistic, high-end furniture, magazine style' },
+  { id: 'food', label: 'Food photo', pattern: '{dish} on ceramic plate, soft daylight, appetizing, shallow depth of field, food photography' },
+  { id: 'icon', label: 'UI icon', pattern: '{object} flat vector icon, minimalist, crisp lines, subtle gradient, app icon' },
 ]
 
 function classNames(...values) {
@@ -326,7 +329,7 @@ function App() {
                 {TEMPLATES.map((t) => (
                   <button
                     key={t.id}
-                    className={classNames('btn btn-secondary h-8 px-3', activeTemplate === t.id && 'ring-1 ring-brand-500')}
+                    className={classNames('template-chip', activeTemplate === t.id && 'ring-1 ring-brand-500')}
                     onClick={() => setActiveTemplate(activeTemplate === t.id ? null : t.id)}
                     title={`Use ${t.label} template`}
                   >{t.label}</button>
@@ -336,7 +339,7 @@ function App() {
                 <TemplateBuilder
                   template={TEMPLATES.find(t => t.id === activeTemplate)}
                   currentPrompt={prompt}
-                  onApply={(txt) => { setPrompt(txt); setActiveTemplate(null); toast.success('Template applied') }}
+                  onApply={(txt, tpl) => { setPrompt(txt); setActiveTemplate(null); toast.success(`${tpl.label} template applied`) }}
                   onCancel={() => setActiveTemplate(null)}
                 />
               )}

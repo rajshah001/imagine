@@ -55,7 +55,7 @@ export default function TemplateBuilder({ template, currentPrompt, onApply, onCa
 
       <div className="mt-4 flex justify-end gap-2">
         <button className="btn btn-secondary" onClick={onCancel}>Cancel</button>
-        <button className="btn" disabled={!canApply} onClick={() => onApply(preview)}>Apply</button>
+        <button className="btn" disabled={!canApply} onClick={() => onApply(preview, template)}>Apply</button>
       </div>
     </div>
   )
