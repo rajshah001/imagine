@@ -84,6 +84,7 @@ function App() {
   const [nologo, setNologo] = useState(true)
   const [enhance, setEnhance] = useState(false)
   const [safe, setSafe] = useState(true)
+  const [seedLocked, setSeedLocked] = useState(false)
 
   // Applied parameters (used to actually fetch an image)
   const [appliedPrompt, setAppliedPrompt] = useState(DEFAULT_PROMPT)
@@ -117,10 +118,16 @@ function App() {
       toast.error('Enter a prompt to generate')
       return
     }
+    // If seed is not locked, randomize per generation
+    let nextSeed = seed
+    if (!seedLocked) {
+      nextSeed = Math.floor(Math.random() * 10_000)
+      setSeed(nextSeed)
+    }
     // Apply current draft controls and trigger a new generation
     setAppliedPrompt(prompt)
     setAppliedModel(model)
-    setAppliedSeed(seed)
+    setAppliedSeed(nextSeed)
     setAppliedWidth(width)
     setAppliedHeight(height)
     setAppliedNologo(nologo)
@@ -142,7 +149,10 @@ function App() {
       const objectUrl = URL.createObjectURL(blob)
       const link = document.createElement('a')
       link.href = objectUrl
-      link.download = `pollinations-${seed}.png`
+      const dt = new Date()
+      const pad = (n) => String(n).padStart(2, '0')
+      const stamp = `${dt.getFullYear()}${pad(dt.getMonth()+1)}${pad(dt.getDate())}-${pad(dt.getHours())}${pad(dt.getMinutes())}${pad(dt.getSeconds())}`
+      link.download = `${stamp}-${appliedModel}-${appliedSeed}-${appliedWidth}x${appliedHeight}.png`
       document.body.appendChild(link)
       link.click()
       link.remove()
@@ -244,11 +254,15 @@ function App() {
               </div>
 
               <div>
-                <label className="label flex items-center gap-1">Seed <InfoTip align="start" text="Randomness control. Same prompt + same seed gives repeatable results." /></label>
-                <div className="flex gap-2">
+                <label className="label flex items-center gap-1">Seed <InfoTip align="start" text="Randomness control. Same prompt + same seed gives repeatable results. Toggle lock to keep the same seed between runs." /></label>
+                <div className="flex items-center gap-2">
                   <input className="input" type="number" value={seed}
                          onChange={(e) => setSeed(Number(e.target.value))} />
                   <button className="btn btn-secondary" onClick={onRandomizeSeed}>Random</button>
+                  <label className="ml-2 inline-flex items-center gap-2 text-xs text-slate-300">
+                    <input type="checkbox" className="size-4" checked={seedLocked} onChange={(e) => setSeedLocked(e.target.checked)} />
+                    Lock
+                  </label>
                 </div>
               </div>
 
@@ -330,6 +344,14 @@ function App() {
             </button>
             <button className="btn btn-secondary" onClick={onCopyLink} disabled={!imageUrl}>
               Copy link
+            </button>
+            <button className="btn btn-secondary" onClick={async () => {
+              if (!imageUrl) return
+              const md = `![${appliedPrompt?.slice(0,80) || 'image'}](${imageUrl})`
+              await navigator.clipboard.writeText(md)
+              toast('Markdown copied', { icon: '📝' })
+            }} disabled={!imageUrl}>
+              Copy Markdown
             </button>
           </div>
         </section>
